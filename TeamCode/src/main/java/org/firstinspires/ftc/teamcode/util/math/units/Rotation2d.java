@@ -1,11 +1,10 @@
-package org.firstinspires.ftc.teamcode.util.math;
+package org.firstinspires.ftc.teamcode.util.math.units;
 
 import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Rotation2d {
     private double radians;

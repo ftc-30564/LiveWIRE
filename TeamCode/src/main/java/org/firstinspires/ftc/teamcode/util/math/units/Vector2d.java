@@ -1,6 +1,4 @@
-package org.firstinspires.ftc.teamcode.util.math;
-
-import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
+package org.firstinspires.ftc.teamcode.util.math.units;
 
 public class Vector2d {
     public double x;
@@ -44,7 +42,7 @@ public class Vector2d {
      * @return The magnitude of the vector
      */
     public double getMagnitude() {
-        return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));   // Pythagorean theorem
+        return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
     /**
      * Gets the vector angle in radians.

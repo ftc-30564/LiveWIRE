@@ -1,14 +1,38 @@
-package org.firstinspires.ftc.teamcode.util.math;
+package org.firstinspires.ftc.teamcode.util.math.units;
+
+import android.annotation.SuppressLint;
+
+import androidx.annotation.NonNull;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.util.math.units.Distance;
 
 public class Pose2d {
     public Distance x;
     public Distance y;
     public Rotation2d heading;
+
+    public enum CoordinateSystem {
+        STANDARD(0, 0, 0),
+        PEDRO_PATHING(-72, -72, 0);
+
+        double translationX;
+        double translationY;
+        double rotation;
+
+        /**
+         * Coordinate system enum for converting across coordinates
+         * @param translationX translation x, inches
+         * @param translationY translation y, inches
+         * @param rotation rotation, inches. NOTE: rotation doesn't do anything at the moment
+         */
+        CoordinateSystem(double translationX, double translationY, double rotation) {
+            this.translationX = translationX;
+            this.translationY = translationY;
+            this.rotation = rotation;
+        }
+    }
 
     /**
      * Constructor for Pose2d. A class containing a 2d translational and a rotational element, often used to represent the robot's current state on the field.
@@ -51,6 +75,14 @@ public class Pose2d {
         this.x = x;
         this.y = y;
         this.heading = theta;
+    }
+
+    public Pose2d(Pose2D pose2D) {
+        this(
+                pose2D.getX(DistanceUnit.INCH),
+                pose2D.getY(DistanceUnit.INCH),
+                pose2D.getHeading(AngleUnit.RADIANS)
+        );
     }
 
     /**
@@ -102,7 +134,7 @@ public class Pose2d {
      * @param pose the pose to add
      * @return a new pose with the X, Y and headings combined.
      */
-    public Pose2d add(Pose2d pose) {
+    public Pose2d plus(Pose2d pose) {
         return new Pose2d(
                 this.x.plus(pose.x),
                 this.y.plus(pose.y),
@@ -114,7 +146,7 @@ public class Pose2d {
      * @param vector the vector to add
      * @return a new pose with the X, Y and headings combined.
      */
-    public Pose2d add(Vector2d vector, DistanceUnit unit) {
+    public Pose2d plus(Vector2d vector, DistanceUnit unit) {
         return new Pose2d(
                 this.x.plus(Distance.fromUnit(vector.x, unit)),
                 this.y.plus(Distance.fromUnit(vector.y, unit)),
@@ -126,7 +158,7 @@ public class Pose2d {
      * @param pose the pose to subtract
      * @return a new pose with the X, Y and headings subtracted.
      */
-    public Pose2d subtract(Pose2d pose) {
+    public Pose2d minus(Pose2d pose) {
         return new Pose2d(
                 this.x.minus(pose.x),
                 this.y.minus(pose.y),
@@ -138,7 +170,7 @@ public class Pose2d {
      * @param vector the vector to subtract
      * @return a new pose with the X and Y subtracted.
      */
-    public Pose2d subtract(Vector2d vector, DistanceUnit unit) {
+    public Pose2d minus(Vector2d vector, DistanceUnit unit) {
         return new Pose2d(
                 this.x.minus(Distance.fromUnit(vector.x, unit)),
                 this.y.minus(Distance.fromUnit(vector.y, unit)),
@@ -164,6 +196,31 @@ public class Pose2d {
         return Math.sqrt(
                 Math.pow(this.x.unit(unit) - vector.x, 2) +
                         Math.pow(this.y.unit(unit) - vector.y, 2));
+    }
+
+    /**
+     * Converts a Pose2d across a coordinate system.
+     * @param pose the pose to convert
+     * @param before the current coordinate system of the pose object
+     * @param after the desired coordinate system
+     * @return a converted Pose2d
+     */
+    public static Pose2d convertCoordinateSystem(Pose2d pose, CoordinateSystem before, CoordinateSystem after) {
+        Pose2d addPose = new Pose2d();
+
+        addPose.x = Distance.fromInches(before.translationX - after.translationX);
+        addPose.y = Distance.fromInches(before.translationY - after.translationY);
+
+        // TODO: implement rotation
+
+        return pose.plus(addPose);
+    }
+
+    @SuppressLint("DefaultLocale")
+    @NonNull
+    @Override
+    public String toString() {
+        return String.format("Pose(in): %.2f, %.2f, %.2f", getX().inches(), getY().inches(), getHeading().getDegrees());
     }
 
     public Pose2D pose2D(DistanceUnit distUnit, AngleUnit angleUnit) {

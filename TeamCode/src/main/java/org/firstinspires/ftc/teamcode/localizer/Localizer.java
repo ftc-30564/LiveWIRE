@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.localizer;
 
-import org.firstinspires.ftc.teamcode.util.math.Pose2d;
+import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
 
 public interface Localizer {
     /**
@@ -17,7 +17,7 @@ public interface Localizer {
 
     /**
      * Returns the velocity of the robot.
-     * @return robot-relative velocity
+     * @return field-relative velocity
      */
     Pose2d getVelocity();
 

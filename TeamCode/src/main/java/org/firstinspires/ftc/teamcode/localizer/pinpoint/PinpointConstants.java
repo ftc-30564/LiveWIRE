@@ -29,4 +29,27 @@ public class PinpointConstants {
      * The encoder resolution of the odometry pods
      */
     public GoBildaPinpointDriver.GoBildaOdometryPods encoderResolution;
+
+    /**
+     * Creates a new PinpointConstants object with the specified parameters.
+     * @param name the hardware map name of the Pinpoint
+     * @param forwardOffset the forward (parallel) odometry pod offset from the center of the robot
+     * @param strafeOffset the strafe (perpendicular) odometry pod offset from the center of the robot
+     * @param forwardInverted the inversion status of the forward (parallel) odometry pod
+     * @param strafeInverted the inversion status of the strafe (perpendicular) odometry pod
+     * @param encoderResolution the encoder resolution of the odometry pods
+     */
+    public PinpointConstants(String name,
+                             Distance forwardOffset,
+                             Distance strafeOffset,
+                             GoBildaPinpointDriver.EncoderDirection forwardInverted,
+                             GoBildaPinpointDriver.EncoderDirection strafeInverted,
+                             GoBildaPinpointDriver.GoBildaOdometryPods encoderResolution) {
+        this.name = name;
+        this.forwardOffset = forwardOffset;
+        this.strafeOffset = strafeOffset;
+        this.forwardInverted = forwardInverted;
+        this.strafeInverted = strafeInverted;
+        this.encoderResolution = encoderResolution;
+    }
 }

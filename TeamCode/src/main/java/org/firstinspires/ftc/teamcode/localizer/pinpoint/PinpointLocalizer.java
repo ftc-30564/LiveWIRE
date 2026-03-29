@@ -6,8 +6,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.localizer.Localizer;
-import org.firstinspires.ftc.teamcode.util.math.Pose2d;
-import org.firstinspires.ftc.teamcode.util.math.Rotation2d;
+import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
+import org.firstinspires.ftc.teamcode.util.math.units.Rotation2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Distance;
 
 public class PinpointLocalizer implements Localizer {
