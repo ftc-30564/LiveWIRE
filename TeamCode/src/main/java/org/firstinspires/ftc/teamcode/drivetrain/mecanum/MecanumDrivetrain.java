@@ -75,6 +75,7 @@ public class MecanumDrivetrain implements Drivetrain {
      */
     @Override
     public void setToFieldVector(Vector2d vector, double rotation) {
+        // convert the field relative vector to robot relative
         vector.setAngle(
                 vector.getAngle() - this.poseEstimator.getPose().heading.getRadians()
         );
@@ -84,6 +85,7 @@ public class MecanumDrivetrain implements Drivetrain {
 
     /**
      * Sets the motor powers to achieve a desired robot-relative velocity. The input vector and rotation are in percentage, so they will be used directly to calculate motor powers.
+     * Note: this does not directly call the motors; but rather it sets the percentages that will later be called under update().
      * @param vector the desired robot-relative velocity vector
      * @param rotation the desired rotational velocity
      */

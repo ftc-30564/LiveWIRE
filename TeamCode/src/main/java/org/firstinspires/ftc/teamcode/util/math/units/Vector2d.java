@@ -23,7 +23,7 @@ public class Vector2d {
      * @param add Vector to add to this vector
      * @return The resulting vector
      */
-    public Vector2d add(Vector2d add) {
+    public Vector2d plus(Vector2d add) {
         return new Vector2d(this.x + add.x, this.y + add.y);
     }
 
@@ -32,7 +32,7 @@ public class Vector2d {
      * @param sub Vector to subtract from this vector
      * @return The resulting vector
      */
-    public Vector2d subtract(Vector2d sub) {
+    public Vector2d minus(Vector2d sub) {
         return new Vector2d(this.x - sub.x, this.y - sub.y);
     }
 
