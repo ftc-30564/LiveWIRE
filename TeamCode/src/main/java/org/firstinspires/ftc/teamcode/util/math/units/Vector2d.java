@@ -86,4 +86,11 @@ public class Vector2d {
     public void setAngle(double angle) {
         this.setAngleAndMagnitude(angle, getMagnitude());
     }
+
+    public double distanceFrom(Vector2d vect) {
+        return Math.sqrt(
+                Math.pow(this.x - vect.x, 2) +
+                Math.pow(this.y - vect.y, 2)
+        );
+    }
 }

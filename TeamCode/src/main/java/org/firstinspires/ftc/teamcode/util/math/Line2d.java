@@ -79,12 +79,6 @@ public class Line2d {
         return Optional.of(0.0);
     }
 
-    // returns a line perpendicular to the current one, intersecting a given point
-    // Bx - Ay = Bx1 - Ay1
-    public Line2d perpendicularLine(Vector2d pointToIntersect) {
-        return new Line2d(this.b, -this.a, (pointToIntersect.x*this.b - pointToIntersect.y*this.a));
-    }
-
     // Returns the point of intersection from a given line
     public Vector2d pointOfIntersection(Line2d line) {
         // this uses Cramer's rule (todo: read up on this)
@@ -97,5 +91,12 @@ public class Line2d {
         double x = (this.c * line.b - line.c * this.b) / det;
         double y = (this.a * line.c - line.a * this.c) / det;
         return new Vector2d(x, y);
+    }
+
+    // returns the closest (perpendicular) distance to a point
+    public double distanceToPoint(Vector2d point) {
+        Line2d perpendicularLine = new Line2d(this.b, -this.a, (point.x*this.b - point.y*this.a));
+
+        return point.distanceFrom(pointOfIntersection(perpendicularLine));
     }
 }

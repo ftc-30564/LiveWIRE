@@ -5,15 +5,14 @@ import org.firstinspires.ftc.teamcode.drivetrain.Drivetrain;
 import org.firstinspires.ftc.teamcode.path.points.Waypoint;
 import org.firstinspires.ftc.teamcode.util.math.Line2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
-import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
-import org.firstinspires.ftc.teamcode.util.pid.DistanceProfiledPIDController;
-import org.firstinspires.ftc.teamcode.util.pid.ProfiledPIDConstants;
+import org.firstinspires.ftc.teamcode.util.pid.DistanceProfiledVelocityController;
+import org.firstinspires.ftc.teamcode.util.pid.ProfiledControllerConstants;
 
 public class PathFollower {
     private Drivetrain drivetrain;
     private Path path;
 
-    private DistanceProfiledPIDController profiledPIDController;
+    private DistanceProfiledVelocityController profiledPIDController;
     // lastWaypoint is the waypoint the robot is coming from. nextWaypoint is the waypoint the robot is approaching.
     // Both are needed for accel/decel
     private Waypoint lastWaypoint;
@@ -31,7 +30,7 @@ public class PathFollower {
     public void queuePath(Path path) {
         this.path = path;
 
-        this.profiledPIDController = new DistanceProfiledPIDController(new ProfiledPIDConstants(0,0,0,0,0,0,0,0,0), 0, 50);
+        this.profiledPIDController = new DistanceProfiledVelocityController(new ProfiledControllerConstants(0,0,0,0,0,0,0,0,0), 0, 50);
         this.lastWaypoint = path.waypoints.get(0);
         this.nextWaypoint = path.waypoints.get(1);
         this.targetVelocity = path.maxVelocity;
@@ -43,23 +42,11 @@ public class PathFollower {
         this.currentPose = this.drivetrain.getPose();
         this.currentVelocity = this.drivetrain.getVelocity();
 
-        Vector2d closestPointToPath = closestPointToLine(this.currentPose.vector(DistanceUnit.INCH),
-                new Line2d(this.lastWaypoint.point.vector(DistanceUnit.INCH), this.nextWaypoint.point.vector(DistanceUnit.INCH)));
+        Line2d targetLine = new Line2d(this.lastWaypoint.point.vector(DistanceUnit.INCH), this.nextWaypoint.point.vector(DistanceUnit.INCH)));
 
-        // looks at the distance from the robot's current position and the closest point on the path
-        double translationalError = this.currentPose.vector(DistanceUnit.INCH).minus(closestPointToPath).getMagnitude();
+        // the distance from the target line that the robot must follow.
+        double translationalError = targetLine.distanceToPoint(this.currentPose.vector(DistanceUnit.INCH));
 
         // check to see if it has passed its nextWaypoint
-    }
-
-    /**
-     * Calculates the point on a line which is the closest to a reference point. Could probably use a better name but whatever. Does this by calculating
-     * the point that intercepts two lines: the given line, and the perpendicular line that intersects the reference point.
-     * @param point the point outside the line
-     * @return a point inside a line that is closest to the input point
-     */
-    public Vector2d closestPointToLine(Vector2d point, Line2d line) {
-        Line2d perpendicularLine = line.perpendicularLine(point);
-        return line.pointOfIntersection(perpendicularLine);
     }
 }
