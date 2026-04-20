@@ -5,8 +5,8 @@ import org.firstinspires.ftc.teamcode.drivetrain.Drivetrain;
 import org.firstinspires.ftc.teamcode.path.points.Waypoint;
 import org.firstinspires.ftc.teamcode.util.math.Line2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
-import org.firstinspires.ftc.teamcode.util.pid.DistanceProfiledVelocityController;
-import org.firstinspires.ftc.teamcode.util.pid.ProfiledControllerConstants;
+import org.firstinspires.ftc.teamcode.util.pid.controller.DistanceProfiledVelocityController;
+import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
 
 public class PathFollower {
     private Drivetrain drivetrain;
@@ -30,10 +30,16 @@ public class PathFollower {
     public void queuePath(Path path) {
         this.path = path;
 
-        this.profiledPIDController = new DistanceProfiledVelocityController(new ProfiledControllerConstants(0,0,0,0,0,0,0,0,0), 0, 50);
         this.lastWaypoint = path.waypoints.get(0);
         this.nextWaypoint = path.waypoints.get(1);
-        this.targetVelocity = path.maxVelocity;
+
+        this.profiledPIDController = new DistanceProfiledVelocityController(
+                new ProfiledControllerConstants(
+                        this.lastWaypoint.maxAccel,
+                        this.nextWaypoint.maxDecel,
+                        this.path.maxVelocity),
+                this.lastWaypoint.velocity,
+                this.nextWaypoint.velocity);
 
         this.profiledPIDController.reset(this.lastWaypoint.velocity, this.nextWaypoint.velocity);
     }

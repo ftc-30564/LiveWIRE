@@ -1,9 +1,11 @@
-package org.firstinspires.ftc.teamcode.util.pid;
+package org.firstinspires.ftc.teamcode.util.pid.controller;
+
+import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
 
 /**
- * Distance based profiled velocity generator. Instead of going based off of time, this goes based off of distance from the target to control
- * deceleration This is meant to react better to disturbances instead of getting thrown off like a time approach would. This purely
- * generates velocity setpoints that are returned. 
+ * Distance based profiled velocity generator. Instead of going based off of purely time, this goes based off of distance from the target to control
+ * deceleration. This is meant to react better to disturbances instead of getting thrown off like a time approach would. This purely
+ * generates velocity setpoints that are returned. Acceleration is time-based, deceleration is distance-based.
  * TODO: this should handle initialVelocity and finalVelocity
  */
 public class DistanceProfiledVelocityController {
@@ -33,7 +35,7 @@ public class DistanceProfiledVelocityController {
         this.initialVelocity = initialVelocity;
         this.finalVelocity = finalVelocity;
 
-        // distances that it takes to accelerate/decelerate from max velocity.
+        // time/distance that it takes to accelerate/decelerate to/from max velocity.
         // TODO: we may never hit max velocity
         this.timeToAccelerate = (constants.kMaxVel - this.initialVelocity) / constants.kMaxAccel;
         this.distanceToDecelerate = (Math.pow(constants.kMaxVel, 2) / (2 * constants.kMaxDecel));
@@ -51,11 +53,11 @@ public class DistanceProfiledVelocityController {
         double error = target - current;
         double ret;
 
-        if (this.elapsedTimeSeconds < this.timeToAccelerate) {
-            ret = this.elapsedTimeSeconds * constants.kMaxAccel;
-        }
-        else if (error < this.distanceToDecelerate) {
+        if (error < this.distanceToDecelerate) {
             ret = Math.sqrt(2 * constants.kMaxDecel * error);
+        }
+        else if (this.elapsedTimeSeconds < this.timeToAccelerate) {
+            ret = this.elapsedTimeSeconds * constants.kMaxAccel;
         }
         else {
             ret = constants.kMaxVel;

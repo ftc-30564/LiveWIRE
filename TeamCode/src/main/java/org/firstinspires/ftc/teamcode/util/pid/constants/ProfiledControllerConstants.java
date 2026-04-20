@@ -1,13 +1,6 @@
-package org.firstinspires.ftc.teamcode.util.pid;
+package org.firstinspires.ftc.teamcode.util.pid.constants;
 
 public class ProfiledControllerConstants {
-//    public double kV;
-//    public double kA;
-//    public double kS;
-//    public double kP;
-//    public double kI;
-//    public double kD;
-
     public double kMaxAccel;
     public double kMaxDecel;
     public double kMaxVel;
