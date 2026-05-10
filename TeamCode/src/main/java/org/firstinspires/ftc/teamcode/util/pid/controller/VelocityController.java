@@ -28,6 +28,5 @@ public class VelocityController {
                 targetAccel * constants.kA +
                 (error * constants.kP) +
                 (actualAccel * constants.kD);
-
     }
 }

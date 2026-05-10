@@ -220,7 +220,7 @@ public class Pose2d {
     @NonNull
     @Override
     public String toString() {
-        return String.format("Pose(in): %.2f, %.2f, %.2f", getX().inches(), getY().inches(), getHeading().getDegrees());
+        return String.format("Pose2d: %.2f, %.2f, %.2f", getX().inches(), getY().inches(), getHeading().getDegrees());
     }
 
     public Pose2D pose2D(DistanceUnit distUnit, AngleUnit angleUnit) {

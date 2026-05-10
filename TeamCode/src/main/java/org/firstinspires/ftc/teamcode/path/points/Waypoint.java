@@ -16,15 +16,24 @@ public class Waypoint {
      */
     public double maxDecel;
     /**
+     * The max velocity the robot may travel from now on past this point.
+     */
+    public double maxVelocity;
+    /**
      * The target velocity the robot should aim at when approaching the point, in inches per second
      */
-    public double velocity = 0;
+    public double targetVelocity = 0;
     /**
      * The ratio of how much the robot should slow down when it encounters a sharp angle change in the path,
      * ex. a 90 degree turn. This is multiplied by the cosine of the angle change. A higher ratio means the robot
-     * will slow down more agressively, while a lower ratio means the robot won't slow down as much.
+     * will slow down more aggressively, while a lower ratio means the robot won't slow down as much.
      */
     public double slowDownRatio = 1;
+
+    /**
+     * The tolerance the robot should be within to consider itself as having reached the waypoint, in inches.
+     */
+    public double tolerance = 0.5;
 
     /**
      * Creates a new waypoint with the given point, max acceleration, and max deceleration.
@@ -49,7 +58,7 @@ public class Waypoint {
         this.point = point;
         this.maxAccel = maxAccel;
         this.maxDecel = maxDecel;
-        this.velocity = velocity;
+        this.targetVelocity = velocity;
     }
 
     /**
@@ -64,7 +73,7 @@ public class Waypoint {
         this.point = point;
         this.maxAccel = maxAccel;
         this.maxDecel = maxDecel;
-        this.velocity = velocity;
+        this.targetVelocity = velocity;
         this.slowDownRatio = slowDownRatio;
     }
 }
