@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.math.units;
 
+import android.app.ActivityOptions;
+
 public class Vector2d {
     public double x;
     public double y;
@@ -92,5 +94,16 @@ public class Vector2d {
                 Math.pow(this.x - vect.x, 2) +
                 Math.pow(this.y - vect.y, 2)
         );
+    }
+
+    public Vector2d withMagnitude(double mag) {
+        Vector2d ret = new Vector2d(this.x, this.y);
+        ret.setMagnitude(mag);
+
+        return ret;
+    }
+
+    public Vector2d perpendicular() {
+        return new Vector2d(this.x, -this.y);
     }
 }

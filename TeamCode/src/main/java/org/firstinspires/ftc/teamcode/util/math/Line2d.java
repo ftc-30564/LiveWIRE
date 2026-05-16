@@ -29,6 +29,24 @@ public class Line2d {
 
     /**
      * point point form
+     */
+    public Line2d(Vector2d vector) {
+        // vertical line
+        if (vector.x == 0) {
+            this.a = 1;
+            this.b = 0;
+            this.c = 0;
+            return;
+        }
+
+        double slope = vector.y / vector.x;
+        this.a = -slope;
+        this.b = 1;
+        this.c = vector.y;
+    }
+
+    /**
+     * point point form
      * @param point1
      * @param point2
      */

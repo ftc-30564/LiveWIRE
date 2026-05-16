@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.util.pid.controller;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.util.math.units.Distance;
 import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
 
 public class DistanceProfiledVelocityGenerator {
@@ -10,6 +9,8 @@ public class DistanceProfiledVelocityGenerator {
 
     private double initialVelocity;
     private double finalVelocity;
+
+    private double runningSeconds = 0;
 
     private double timeToAccelerate;
     private double distanceToDecelerate;
@@ -38,10 +39,10 @@ public class DistanceProfiledVelocityGenerator {
     }
 
     public void reset(double initialVelocity, double finalVelocity) {
-        this.elapsedTime.reset();
-
         this.initialVelocity = initialVelocity;
         this.finalVelocity = finalVelocity;
+
+        this.runningSeconds = 0;
 
         // time/distance that it takes to accelerate/decelerate to/from max velocity.
         // TODO: we may never hit max velocity
@@ -52,10 +53,13 @@ public class DistanceProfiledVelocityGenerator {
     /**
      * Returns the output of the controller based on the position error. This calculates acceleration and deceleration
      * based on time and distance. This allows for better handling of disturbances and more accurate following.
+     * @param dt delta time, in milliseconds
      * @return the output of the controller
      */
-    public double update(double positionError) {
+    public double update(double positionError, double dt) {
         double ret;
+
+        runningSeconds += (dt / 1000);
 
         if (positionError < this.distanceToDecelerate) {
             ret = Math.sqrt(2 * constants.kMaxDecel * positionError);
