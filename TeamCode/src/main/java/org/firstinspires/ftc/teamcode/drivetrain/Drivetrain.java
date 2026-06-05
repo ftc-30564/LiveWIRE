@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.drivetrain;
 import org.firstinspires.ftc.teamcode.localizer.Localizer;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
+import org.firstinspires.ftc.teamcode.util.pid.constants.PIDSVAConstants;
 
 public interface Drivetrain {
     /**
@@ -41,4 +42,10 @@ public interface Drivetrain {
      * @param rotation the desired rotational velocity
      */
     void setToRobotVector(Vector2d vector, double rotation);
+
+    /**
+     * Returns the PIDSVA (velocity) constants that keep the drivetrain at a target velocity.
+     * @return PIDSVAConstants object with constants
+     */
+    PIDSVAConstants getVelocityConstants();
 }

@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.drivetrain.Drivetrain;
 import org.firstinspires.ftc.teamcode.localizer.PoseEstimator;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
+import org.firstinspires.ftc.teamcode.util.pid.constants.PIDSVAConstants;
 
 public class MecanumDrivetrain implements Drivetrain {
     private final DcMotorEx frontLeftMotor;
@@ -19,6 +20,9 @@ public class MecanumDrivetrain implements Drivetrain {
     private double backLeftPower;
     private double backRightPower;
 
+    private final MecanumConstants mecanumConstants;
+    private final PIDSVAConstants pidsvaConstants;
+
     private final PoseEstimator poseEstimator;
 
     /**
@@ -27,7 +31,7 @@ public class MecanumDrivetrain implements Drivetrain {
      * @param poseEstimator pose estimator instance for localization
      * @param mecanumConstants a class containing the constants for a mecanum drive
      */
-    public MecanumDrivetrain(HardwareMap hardwareMap, PoseEstimator poseEstimator, MecanumConstants mecanumConstants) {
+    public MecanumDrivetrain(HardwareMap hardwareMap, PoseEstimator poseEstimator, MecanumConstants mecanumConstants, PIDSVAConstants pidsvaConstants) {
         this.poseEstimator = poseEstimator;
 
         this.frontLeftMotor = hardwareMap.get(DcMotorEx.class, mecanumConstants.frontLeftMotorName);
@@ -39,6 +43,9 @@ public class MecanumDrivetrain implements Drivetrain {
         this.frontRightMotor.setDirection(mecanumConstants.frontRightMotorDirection);
         this.backLeftMotor.setDirection(mecanumConstants.backLeftMotorDirection);
         this.backRightMotor.setDirection(mecanumConstants.backRightMotorDirection);
+
+        this.mecanumConstants = mecanumConstants;
+        this.pidsvaConstants = pidsvaConstants;
     }
 
     /**
@@ -119,5 +126,10 @@ public class MecanumDrivetrain implements Drivetrain {
         this.backRightMotor.setPower(this.backRightPower);
 
         this.poseEstimator.update();
+    }
+
+    @Override
+    public PIDSVAConstants getVelocityConstants() {
+        return this.pidsvaConstants;
     }
 }

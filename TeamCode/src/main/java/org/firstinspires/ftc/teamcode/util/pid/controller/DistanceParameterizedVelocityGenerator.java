@@ -1,23 +1,26 @@
 package org.firstinspires.ftc.teamcode.util.pid.controller;
 
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
 
-public class DistanceProfiledVelocityGenerator {
+public class DistanceParameterizedVelocityGenerator {
     private ProfiledControllerConstants constants;
 
     private double initialVelocity;
     private double finalVelocity;
 
     private double runningSeconds = 0;
+    private long lastNanoTime = 0;
 
     private double timeToAccelerate;
     private double distanceToDecelerate;
 
-    private ElapsedTime elapsedTime = new ElapsedTime();
-
-    public DistanceProfiledVelocityGenerator() {
+    /**
+     * Distance based profiled velocity generator. Instead of going based off of purely time, this goes based off of distance from the target to control
+     * deceleration. This is meant to react better to disturbances instead of getting thrown off like a time approach would. This purely
+     * generates velocity setpoints that are returned. Acceleration is time-based, deceleration is distance-based.
+     * TODO: this should handle initialVelocity and finalVelocity
+     */
+    public DistanceParameterizedVelocityGenerator() {
         this(new ProfiledControllerConstants(0, 0, 0), 0, 0);
     }
 
@@ -27,7 +30,7 @@ public class DistanceProfiledVelocityGenerator {
      * generates velocity setpoints that are returned. Acceleration is time-based, deceleration is distance-based.
      * TODO: this should handle initialVelocity and finalVelocity
      */
-    public DistanceProfiledVelocityGenerator(ProfiledControllerConstants constants, double initialVelocity, double finalVelocity) {
+    public DistanceParameterizedVelocityGenerator(ProfiledControllerConstants constants, double initialVelocity, double finalVelocity) {
         this.constants = constants;
 
         this.initialVelocity = initialVelocity;
@@ -53,19 +56,21 @@ public class DistanceProfiledVelocityGenerator {
     /**
      * Returns the output of the controller based on the position error. This calculates acceleration and deceleration
      * based on time and distance. This allows for better handling of disturbances and more accurate following.
-     * @param dt delta time, in milliseconds
      * @return the output of the controller
      */
-    public double update(double positionError, double dt) {
-        double ret;
+    public double update(double positionError) {
+        double dt = System.nanoTime() - this.lastNanoTime;
+        this.lastNanoTime = System.nanoTime();
 
-        runningSeconds += (dt / 1000);
+        runningSeconds += (dt / Math.pow(10, 9));
+
+        double ret;
 
         if (positionError < this.distanceToDecelerate) {
             ret = Math.sqrt(2 * constants.kMaxDecel * positionError);
         }
-        else if (this.elapsedTime.seconds() < this.timeToAccelerate) {
-            ret = this.elapsedTime.seconds() * constants.kMaxAccel;
+        else if (runningSeconds < this.timeToAccelerate) {
+            ret = runningSeconds * constants.kMaxAccel;
         }
         else {
             ret = constants.kMaxVel;

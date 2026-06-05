@@ -4,6 +4,7 @@ import org.firstinspires.ftc.teamcode.util.pid.constants.PIDFConstants;
 
 public class PIDFController {
     private PIDFConstants constants;
+    private double derivative;
     private double lastError;
 
     public PIDFController(PIDFConstants constants) {
@@ -11,12 +12,15 @@ public class PIDFController {
     }
 
     public double update(double error, double dt) {
-        double velocity = (error - lastError) / dt;
+        this.derivative = (error - lastError) / dt;
 
         // TODO: integral
         return Math.signum(error) * constants.kF +
                 (error * constants.kP) +
-                (velocity * constants.kD);
+                (this.derivative * constants.kD);
     }
 
+    public double getDerivative() {
+        return this.derivative;
+    }
 }
