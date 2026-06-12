@@ -18,7 +18,6 @@ public class DistanceParameterizedVelocityGenerator {
      * Distance based profiled velocity generator. Instead of going based off of purely time, this goes based off of distance from the target to control
      * deceleration. This is meant to react better to disturbances instead of getting thrown off like a time approach would. This purely
      * generates velocity setpoints that are returned. Acceleration is time-based, deceleration is distance-based.
-     * TODO: this should handle initialVelocity and finalVelocity
      */
     public DistanceParameterizedVelocityGenerator() {
         this(new ProfiledControllerConstants(0, 0, 0), 0, 0);
@@ -28,7 +27,6 @@ public class DistanceParameterizedVelocityGenerator {
      * Distance based profiled velocity generator. Instead of going based off of purely time, this goes based off of distance from the target to control
      * deceleration. This is meant to react better to disturbances instead of getting thrown off like a time approach would. This purely
      * generates velocity setpoints that are returned. Acceleration is time-based, deceleration is distance-based.
-     * TODO: this should handle initialVelocity and finalVelocity
      */
     public DistanceParameterizedVelocityGenerator(ProfiledControllerConstants constants, double initialVelocity, double finalVelocity) {
         this.constants = constants;
