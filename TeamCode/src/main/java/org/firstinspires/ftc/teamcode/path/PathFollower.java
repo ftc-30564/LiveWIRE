@@ -1,24 +1,24 @@
 package org.firstinspires.ftc.teamcode.path;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.drivetrain.Drivetrain;
+import org.firstinspires.ftc.teamcode.drivetrain.mecanum.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.path.points.Waypoint;
 import org.firstinspires.ftc.teamcode.util.math.Line2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
 import org.firstinspires.ftc.teamcode.util.pid.constants.PIDFConstants;
-import org.firstinspires.ftc.teamcode.util.pid.constants.PIDSVAConstants;
 import org.firstinspires.ftc.teamcode.util.pid.controller.DistanceParameterizedVelocityGenerator;
 import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
 import org.firstinspires.ftc.teamcode.util.pid.controller.PIDFController;
 import org.firstinspires.ftc.teamcode.util.pid.controller.VelocityController;
 
 public class PathFollower {
-    private Drivetrain drivetrain;
+    private MecanumDrivetrain drivetrain;
     private Path path;
 
     private DistanceParameterizedVelocityGenerator distanceProfiledVelocityGenerator;
-    private VelocityController driveVelocityController;
+    private VelocityController forwardVelocityController;
+    private VelocityController lateralVelocityController;
     private PIDFController translationalPIDFController;
 
     // lastWaypoint is the waypoint the robot is coming from. nextWaypoint is the waypoint the robot is approaching.
@@ -37,11 +37,15 @@ public class PathFollower {
     private double targetVelocity;
     private double perpendicularError;
 
-    public PathFollower(Drivetrain drivetrain) {
-        this.drivetrain = drivetrain;
+    /**
+     * Class that generates vectors to follow to maintain a path.
+     * @param drivetrain
+     */
+    public PathFollower(MecanumDrivetrain drivetrain) {
+        this.forwardVelocityController = new VelocityController(MecanumDrivetrain.forwardVelocityConstants);
+        this.lateralVelocityController = new VelocityController(MecanumDrivetrain.lateralVelocityConstants);
 
         this.distanceProfiledVelocityGenerator = new DistanceParameterizedVelocityGenerator();
-        this.driveVelocityController = new VelocityController(drivetrain.getVelocityConstants()); // TODO: figure out how to obtain constants
         this.translationalPIDFController = new PIDFController(new PIDFConstants(0,0,0,0));
     }
 
@@ -56,16 +60,11 @@ public class PathFollower {
         this.setWaypoint(0);
     }
 
-    public void update(double dt) {
+    public Vector2d update(Pose2d currentPose, Pose2d currentVelocity) {
         this.currentPose = this.drivetrain.getPose();
-        this.currentVelocity = this.drivetrain.getVelocity();
+        this.currentVelocity = this.drivetrain.getFieldCentricVelocity();
 
-        /* The velocity of the robot that is adjusted to purely in the drive vector direction.
-         it calculates one of the sides of a right triangle with the known hypotenuse (velocity)
-         and a known side (distance from velocity endpoint to the main line)
-         */
-        double currentDriveVectorVelocity = Math.sqrt(Math.pow(this.currentVelocity.vector(DistanceUnit.INCH).getMagnitude(), 2)
-                - Math.pow(this.pathLine.distanceToPoint(this.currentVelocity.vector(DistanceUnit.INCH)), 2));
+        Vector2d robotRelativeTargetVelocity = this.pathVector.withMagnitude(targetVelocity).rotated(-this.drivetrain.getPose().heading.getRadians());
 
         // distance from the target waypoint
         this.distanceFromNextWaypoint = this.currentPose.distanceFrom(this.nextWaypoint.point).inches();
@@ -75,15 +74,17 @@ public class PathFollower {
         // generates a target velocity based on the distance from the target waypoint
         this.targetVelocity = this.distanceProfiledVelocityGenerator.update(this.distanceFromNextWaypoint);
 
-        Vector2d calculatedDriveVector = this.pathVector.withMagnitude(
-                this.driveVelocityController.update(currentDriveVectorVelocity, this.targetVelocity));
+        Vector2d calculatedDriveVector = new Vector2d(
+                this.forwardVelocityController.update(this.currentVelocity.x.inches(), targetXVelocity),
+                this.lateralVelocityController.update(this.currentVelocity.y.inches(), targetYVelocity)
+        );
 
         Vector2d calculatedTranslationalVector = this.pathVector.perpendicular().withMagnitude(
-                this.translationalPIDFController.update(this.perpendicularError, dt));
+                this.translationalPIDFController.update(this.perpendicularError));
 
 
         // TODO: figure out rotation
-        this.drivetrain.setToFieldVector(calculatedDriveVector.plus(calculatedTranslationalVector), 0);
+        this.drivetrain.setToFieldRelativePercent(calculatedDriveVector.plus(calculatedTranslationalVector), 0);
 
         // check to see if it has passed its nextWaypoint
         if (this.distanceFromNextWaypoint < this.nextWaypoint.tolerance) {
@@ -91,6 +92,8 @@ public class PathFollower {
 
             this.setWaypoint(this.currentWaypointIndex);
         }
+
+        return calculatedDriveVector.plus(calculatedTranslationalVector);
     }
 
     /**

@@ -6,13 +6,17 @@ public class PIDFController {
     private PIDFConstants constants;
     private double derivative;
     private double lastError;
+    private long lastNanoTime;
 
     public PIDFController(PIDFConstants constants) {
         this.constants = constants;
     }
 
-    public double update(double error, double dt) {
-        this.derivative = (error - lastError) / dt;
+    public double update(double error) {
+        long dt = System.nanoTime() - lastNanoTime;
+        this.lastNanoTime = System.nanoTime();
+
+        this.derivative = (error - lastError) / (dt / Math.pow(10, 9));
 
         // TODO: integral
         return Math.signum(error) * constants.kF +

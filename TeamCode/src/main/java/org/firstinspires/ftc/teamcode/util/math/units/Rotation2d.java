@@ -109,14 +109,7 @@ public class Rotation2d {
      * @return the wrapped rotation
      */
     public Rotation2d wrapped() {
-        double ret = this.radians;
-
-        while (ret >= (2 * Math.PI))
-            ret -= (2 * Math.PI);
-        while (ret < 0)
-            ret += (2 * Math.PI);
-
-        return new Rotation2d(ret);
+        return new Rotation2d(this.radians % (Math.PI * 2));
     }
 
     /**

@@ -96,6 +96,17 @@ public class Vector2d {
         );
     }
 
+    public Vector2d rotated(double angle) {
+        return this.withAngle(this.getAngle() + angle);
+    }
+
+    public Vector2d withAngle(double angle) {
+        Vector2d ret = new Vector2d(this.x, this.y);
+        ret.setAngle(angle);
+
+        return ret;
+    }
+
     public Vector2d withMagnitude(double mag) {
         Vector2d ret = new Vector2d(this.x, this.y);
         ret.setMagnitude(mag);

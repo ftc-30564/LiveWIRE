@@ -37,7 +37,15 @@ public class PoseEstimator {
      * Gets the current field-relative velocity of the robot from the pose estimator, using only odometry (no vision)
      * @return
      */
-    public Pose2d getVelocity() {
+    public Pose2d getFieldCentricVelocity() {
+        return localizer.getVelocity();
+    }
+
+    /**
+     * Gets the current field-relative velocity of the robot from the pose estimator, using only odometry (no vision)
+     * @return
+     */
+    public Pose2d getFieldCentricVelocity() {
         return localizer.getVelocity();
     }
 

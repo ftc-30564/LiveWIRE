@@ -6,7 +6,7 @@ import org.firstinspires.ftc.teamcode.util.pid.constants.PIDSVAConstants;
 
 public class VelocityController {
     private PIDSVAConstants constants;
-    private long lastNanoTime;
+    private long lastNanoTime = System.nanoTime();
     private double lastSetpoint = 0;
     private double lastVelocity = 0;
 
