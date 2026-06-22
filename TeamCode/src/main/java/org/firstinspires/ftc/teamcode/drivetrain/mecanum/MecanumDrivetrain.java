@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.localizer.PoseEstimator;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
@@ -17,19 +18,19 @@ public class MecanumDrivetrain {
     private final DcMotorEx backRightMotor;
 
     // TODO: change motor names
-    private final String frontLeftMotorName = "frontLeftMotor";
-    private final String frontRightMotorName = "frontRightMotor";
-    private final String backLeftMotorName = "backLeftMotor";
-    private final String backRightMotorName = "backRightMotor";
+    public static final String FRONT_LEFT_MOTOR_NAME = "frontLeftMotor";
+    public static final String FRONT_RIGHT_MOTOR_NAME = "frontRightMotor";
+    public static final String BACK_LEFT_MOTOR_NAME = "backLeftMotor";
+    public static final String BACK_RIGHT_MOTOR_NAME = "backRightMotor";
 
     // TODO: change motor directions
-    private final DcMotorSimple.Direction frontLeftMotorDirection = DcMotorSimple.Direction.FORWARD;
-    private final DcMotorSimple.Direction frontRightMotorDirection = DcMotorSimple.Direction.FORWARD;
-    private final DcMotorSimple.Direction backLeftMotorDirection = DcMotorSimple.Direction.FORWARD;
-    private final DcMotorSimple.Direction backRightMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public static final DcMotorSimple.Direction FRONT_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    public static final DcMotorSimple.Direction FRONT_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    public static final DcMotorSimple.Direction BACK_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    public static final DcMotorSimple.Direction BACK_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
 
     // TODO: tune these constants
-    public static PIDSVAConstants forwardVelocityConstants
+    public static final PIDSVAConstants FORWARD_VELOCITY_CONSTANTS
             = new PIDSVAConstants(
         0,        // kS
             0,        // kV
@@ -40,7 +41,7 @@ public class MecanumDrivetrain {
     );
 
     // TODO: tune these constants
-    public static PIDSVAConstants lateralVelocityConstants
+    public static final PIDSVAConstants LATERAL_VELOCITY_CONSTANTS
             = new PIDSVAConstants(
             0,        // kS
             0,        // kV
@@ -51,9 +52,18 @@ public class MecanumDrivetrain {
     );
 
     // TODO: tune these constants
-    public static PIDFConstants translationalPIDConstants
+    public static final PIDFConstants TRANSLATIONAL_PID_CONSTANTS
             = new PIDFConstants(
         0,    // kP
+            0,    // kI
+            0,    // kD
+            0     // kF
+    );
+
+    // TODO: tune these constants
+    public static final PIDFConstants ROTATIONAL_PID_CONSTANTS
+            = new PIDFConstants(
+            0,    // kP
             0,    // kI
             0,    // kD
             0     // kF
@@ -74,15 +84,15 @@ public class MecanumDrivetrain {
     public MecanumDrivetrain(HardwareMap hardwareMap, PoseEstimator poseEstimator) {
         this.poseEstimator = poseEstimator;
 
-        this.frontLeftMotor = hardwareMap.get(DcMotorEx.class, this.frontLeftMotorName);
-        this.frontRightMotor = hardwareMap.get(DcMotorEx.class, this.frontRightMotorName);
-        this.backLeftMotor = hardwareMap.get(DcMotorEx.class, this.backLeftMotorName);
-        this.backRightMotor = hardwareMap.get(DcMotorEx.class, this.backRightMotorName);
+        this.frontLeftMotor = hardwareMap.get(DcMotorEx.class, MecanumDrivetrain.FRONT_LEFT_MOTOR_NAME);
+        this.frontRightMotor = hardwareMap.get(DcMotorEx.class, MecanumDrivetrain.FRONT_RIGHT_MOTOR_NAME);
+        this.backLeftMotor = hardwareMap.get(DcMotorEx.class, MecanumDrivetrain.BACK_LEFT_MOTOR_NAME);
+        this.backRightMotor = hardwareMap.get(DcMotorEx.class, MecanumDrivetrain.BACK_RIGHT_MOTOR_NAME);
 
-        this.frontLeftMotor.setDirection(this.frontLeftMotorDirection);
-        this.frontRightMotor.setDirection(this.frontRightMotorDirection);
-        this.backLeftMotor.setDirection(this.backLeftMotorDirection);
-        this.backRightMotor.setDirection(this.backRightMotorDirection);
+        this.frontLeftMotor.setDirection(MecanumDrivetrain.FRONT_LEFT_MOTOR_DIRECTION);
+        this.frontRightMotor.setDirection(MecanumDrivetrain.FRONT_RIGHT_MOTOR_DIRECTION);
+        this.backLeftMotor.setDirection(MecanumDrivetrain.BACK_LEFT_MOTOR_DIRECTION);
+        this.backRightMotor.setDirection(MecanumDrivetrain.BACK_RIGHT_MOTOR_DIRECTION);
     }
 
     /**
@@ -105,12 +115,18 @@ public class MecanumDrivetrain {
      * Gets the current field-relative velocity of the robot from the pose estimator, using only odometry (no vision)
      * @return the current velocity of the robot
      */
-    public Pose2d getFieldCentricVelocity() {
+    public Pose2d getFieldRelativeVelocity() {
         return this.poseEstimator.getFieldCentricVelocity();
     }
 
+    /**
+     * Returns the velocity relative to the current angle the robot is pointing at.
+     * @return
+     */
     public Pose2d getRobotRelativeVelocity() {
-        return this.getFieldCentricVelocity()
+        return new Pose2d(
+                this.getFieldRelativeVelocity().vector(DistanceUnit.INCH).rotated(-this.poseEstimator.getPose().heading.getRadians()),
+                this.getFieldRelativeVelocity().heading);
     }
 
     /**

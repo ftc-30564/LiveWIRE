@@ -12,18 +12,24 @@ import org.firstinspires.ftc.teamcode.util.math.units.Distance;
 
 public class PinpointLocalizer implements Localizer {
     private GoBildaPinpointDriver pinpoint;
-    private PinpointConstants constants;
+
+    // TODO: change these
+    public static final String NAME = "pinpoint";
+    public static final double FORWARD_OFFSET = 0;
+    public static final double STRAFE_OFFSET = 0;
+    public static final GoBildaPinpointDriver.EncoderDirection FORWARD_INVERTED = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+    public static final GoBildaPinpointDriver.EncoderDirection STRAFE_INVERTED = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+    public static final GoBildaPinpointDriver.GoBildaOdometryPods ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD;
 
     /**
      * A Gobilda pinpoint localizer.
      * @param hardwareMap hardware map instance
-     * @param constants constants used for the pinpoint
      */
-    public PinpointLocalizer(HardwareMap hardwareMap, PinpointConstants constants) {
-        this.pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, constants.name);
+    public PinpointLocalizer(HardwareMap hardwareMap) {
+        this.pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, PinpointLocalizer.NAME);
 
-        this.pinpoint.setOffsets(constants.forwardOffset.inches(), constants.strafeOffset.inches(), DistanceUnit.INCH);
-        this.pinpoint.setEncoderDirections(constants.forwardInverted, constants.strafeInverted);
+        this.pinpoint.setOffsets(PinpointLocalizer.FORWARD_OFFSET, PinpointLocalizer.STRAFE_OFFSET, DistanceUnit.INCH);
+        this.pinpoint.setEncoderDirections(PinpointLocalizer.FORWARD_INVERTED, PinpointLocalizer.STRAFE_INVERTED);
     }
 
     /**
@@ -42,9 +48,9 @@ public class PinpointLocalizer implements Localizer {
     @Override
     public Pose2d getPose() {
         return new Pose2d(
-                Distance.fromInches(this.pinpoint.getPosition().getX(DistanceUnit.INCH)),
-                Distance.fromInches(this.pinpoint.getPosition().getY(DistanceUnit.INCH)),
-                Rotation2d.fromRadians(this.pinpoint.getPosition().getHeading(AngleUnit.RADIANS))
+                this.pinpoint.getPosition().getX(DistanceUnit.INCH),
+                this.pinpoint.getPosition().getY(DistanceUnit.INCH),
+                this.pinpoint.getPosition().getHeading(AngleUnit.RADIANS)
         );
     }
 
@@ -55,9 +61,9 @@ public class PinpointLocalizer implements Localizer {
     @Override
     public Pose2d getVelocity() {
         return new Pose2d(
-                Distance.fromInches(this.pinpoint.getVelX(DistanceUnit.INCH)),
-                Distance.fromInches(this.pinpoint.getVelY(DistanceUnit.INCH)),
-                Rotation2d.fromRadians(this.pinpoint.getHeading(AngleUnit.RADIANS))
+                this.pinpoint.getVelX(DistanceUnit.INCH),
+                this.pinpoint.getVelY(DistanceUnit.INCH),
+                this.pinpoint.getHeading(AngleUnit.RADIANS)
                 );
     }
 

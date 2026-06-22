@@ -36,6 +36,13 @@ public class Waypoint {
     public double tolerance = 0.5;
 
     /**
+     * The heading "strategy" when approaching a waypoint
+     */
+    public HeadingStrategy headingStrategy = HeadingStrategy.INTERPOLATION;
+
+    public Pose2d trackedPoint = null;
+
+    /**
      * Creates a new waypoint with the given point, max acceleration, and max deceleration.
      * @param point The desired 2d pose on the field, including x, y, and heading
      * @param maxAccel The max acceleration leaving the point, in inches per second squared
@@ -75,5 +82,9 @@ public class Waypoint {
         this.maxDecel = maxDecel;
         this.targetVelocity = velocity;
         this.slowDownRatio = slowDownRatio;
+    }
+
+    public double distanceFrom(Waypoint waypoint) {
+        return this.point.distanceFrom(waypoint.point).inches();
     }
 }

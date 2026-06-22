@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.path;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drivetrain.mecanum.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.path.points.HeadingStrategy;
 import org.firstinspires.ftc.teamcode.path.points.Waypoint;
 import org.firstinspires.ftc.teamcode.util.math.Line2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
@@ -17,16 +18,25 @@ public class PathFollower {
     private Path path;
 
     private DistanceParameterizedVelocityGenerator distanceProfiledVelocityGenerator;
+    /**
+     * There are two velocity controllers for forward and lateral. Since mecanum drivetrains have greater friction when pushed side to side,
+     * this combats that by using two tuners for forward and lateral.
+     */
     private VelocityController forwardVelocityController;
     private VelocityController lateralVelocityController;
+    // Controls the translational (side-to-side error) vector of the follower
     private PIDFController translationalPIDFController;
+    private PIDFController rotationalPIDFController;
 
     // lastWaypoint is the waypoint the robot is coming from. nextWaypoint is the waypoint the robot is approaching.
     // Both are needed for accel/decel
     private Waypoint lastWaypoint;
     private Waypoint nextWaypoint;
     private Pose2d currentPose;
-    private Pose2d currentVelocity;
+    // The current velocity of the robot, but robot centric. This is necessary to use two forward/lateral velocity controllers.
+    private Pose2d currentVelocityRobotCentric;
+    // This is the target velocity the robot must follow, but converted to robot centric.
+    private Vector2d targetVelocityRobotCentric;
     private Line2d pathLine;  // the target path represented as a Line2d
     private Vector2d pathVector;
 
@@ -35,18 +45,20 @@ public class PathFollower {
 
     private double distanceFromNextWaypoint;
     private double targetVelocity;
+    private double targetRotation;
     private double perpendicularError;
 
     /**
      * Class that generates vectors to follow to maintain a path.
-     * @param drivetrain
+     * @param drivetrain drivetrain
      */
     public PathFollower(MecanumDrivetrain drivetrain) {
-        this.forwardVelocityController = new VelocityController(MecanumDrivetrain.forwardVelocityConstants);
-        this.lateralVelocityController = new VelocityController(MecanumDrivetrain.lateralVelocityConstants);
+        this.forwardVelocityController = new VelocityController(MecanumDrivetrain.FORWARD_VELOCITY_CONSTANTS);
+        this.lateralVelocityController = new VelocityController(MecanumDrivetrain.LATERAL_VELOCITY_CONSTANTS);
 
         this.distanceProfiledVelocityGenerator = new DistanceParameterizedVelocityGenerator();
-        this.translationalPIDFController = new PIDFController(new PIDFConstants(0,0,0,0));
+        this.translationalPIDFController = new PIDFController(MecanumDrivetrain.TRANSLATIONAL_PID_CONSTANTS);
+        this.rotationalPIDFController = new PIDFController(MecanumDrivetrain.ROTATIONAL_PID_CONSTANTS);
     }
 
     /**
@@ -60,11 +72,19 @@ public class PathFollower {
         this.setWaypoint(0);
     }
 
-    public Vector2d update(Pose2d currentPose, Pose2d currentVelocity) {
+    public void update(Pose2d currentPose, Pose2d currentVelocity) {
         this.currentPose = this.drivetrain.getPose();
-        this.currentVelocity = this.drivetrain.getFieldCentricVelocity();
+        this.currentVelocityRobotCentric = this.drivetrain.getRobotRelativeVelocity();
 
-        Vector2d robotRelativeTargetVelocity = this.pathVector.withMagnitude(targetVelocity).rotated(-this.drivetrain.getPose().heading.getRadians());
+        if (this.nextWaypoint.headingStrategy == HeadingStrategy.INSTANT) {
+            this.targetRotation = this.nextWaypoint.point.heading.getRadians();
+        }
+        else if (this.nextWaypoint.headingStrategy == HeadingStrategy.INTERPOLATION) {
+            // TODO: actual maths
+            this.targetRotation = this.nextWaypoint.point.heading.getRadians();
+        }
+
+        this.targetVelocityRobotCentric = this.pathVector.withMagnitude(targetVelocity).rotated(-this.currentPose.heading.getRadians());
 
         // distance from the target waypoint
         this.distanceFromNextWaypoint = this.currentPose.distanceFrom(this.nextWaypoint.point).inches();
@@ -75,16 +95,19 @@ public class PathFollower {
         this.targetVelocity = this.distanceProfiledVelocityGenerator.update(this.distanceFromNextWaypoint);
 
         Vector2d calculatedDriveVector = new Vector2d(
-                this.forwardVelocityController.update(this.currentVelocity.x.inches(), targetXVelocity),
-                this.lateralVelocityController.update(this.currentVelocity.y.inches(), targetYVelocity)
-        );
+                this.forwardVelocityController.update(this.currentVelocityRobotCentric.x.inches(), this.targetVelocityRobotCentric.x),
+                this.lateralVelocityController.update(this.currentVelocityRobotCentric.y.inches(), this.targetVelocityRobotCentric.y)
+        ).rotated(-this.currentPose.heading.getRadians());
 
         Vector2d calculatedTranslationalVector = this.pathVector.perpendicular().withMagnitude(
                 this.translationalPIDFController.update(this.perpendicularError));
 
 
-        // TODO: figure out rotation
-        this.drivetrain.setToFieldRelativePercent(calculatedDriveVector.plus(calculatedTranslationalVector), 0);
+        this.drivetrain.setToFieldRelativePercent(
+                calculatedDriveVector.plus(calculatedTranslationalVector),
+                this.rotationalPIDFController.update(this.targetRotation - this.currentPose.heading.getRadians())
+        );
+
 
         // check to see if it has passed its nextWaypoint
         if (this.distanceFromNextWaypoint < this.nextWaypoint.tolerance) {
@@ -92,8 +115,6 @@ public class PathFollower {
 
             this.setWaypoint(this.currentWaypointIndex);
         }
-
-        return calculatedDriveVector.plus(calculatedTranslationalVector);
     }
 
     /**

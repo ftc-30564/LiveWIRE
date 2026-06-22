@@ -96,8 +96,8 @@ public class Vector2d {
         );
     }
 
-    public Vector2d rotated(double angle) {
-        return this.withAngle(this.getAngle() + angle);
+    public Vector2d rotated(double radians) {
+        return this.withAngle(this.getAngle() + radians);
     }
 
     public Vector2d withAngle(double angle) {
