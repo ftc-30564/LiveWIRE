@@ -9,10 +9,11 @@ import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
 
 import java.util.ArrayList;
 
+/**
+ * A Path is purely a list of waypoints.
+ */
 public class Path {
     public ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>() {};
-    public ArrayList<HeadingPoint> headingPoints = new ArrayList<HeadingPoint>() {};
-    public ArrayList<CheckPoint> checkPoints = new ArrayList<CheckPoint>();
 
     public Path(Waypoint startingPoint) {
         this.waypoints.add(startingPoint);
@@ -20,16 +21,6 @@ public class Path {
 
     public Path addWaypoint(Waypoint waypoint) {
         this.waypoints.add(waypoint);
-        return this;
-    }
-
-    public Path addHeadingPoint(Rotation2d heading, double distance) {
-        this.headingPoints.add(new HeadingPoint(heading, distance));
-        return this;
-    }
-
-    public Path addCheckPoint(String name, double distance) {
-        this.checkPoints.add(new CheckPoint(name, distance));
         return this;
     }
 }

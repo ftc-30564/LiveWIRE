@@ -39,7 +39,7 @@ public class DistanceParameterizedVelocityGenerator {
         this.constants = constants;
     }
 
-    public void reset(double initialVelocity, double finalVelocity) {
+    public void reset(double initialVelocity, double finalVelocity, double totalDistance) {
         this.initialVelocity = initialVelocity;
         this.finalVelocity = finalVelocity;
 
@@ -47,8 +47,15 @@ public class DistanceParameterizedVelocityGenerator {
 
         // time/distance that it takes to accelerate/decelerate to/from max velocity.
         // TODO: we may never hit max velocity
-        this.timeToAccelerate = (constants.kMaxVel - this.initialVelocity) / constants.kMaxAccel;
-        this.distanceToDecelerate = (Math.pow(constants.kMaxVel, 2) / (2 * constants.kMaxDecel));
+        // if the distance it takes to accelerate AND decelerate add up to greater than the distance between the two waypoints,
+        // figure out the max speed the robot can accelerate to before having to decelerate
+
+        //this.timeToAccelerate = (constants.kMaxVel - this.initialVelocity) / constants.kMaxAccel;
+        // d = vt * .5at^2
+        //double distanceToAccelerate = (this.initialVelocity * this.timeToAccelerate) + (.5 * constants.kMaxAccel * (Math.pow(this.timeToAccelerate, 2)));
+
+        // d = v^2 / 2a
+        //this.distanceToDecelerate = (Math.pow(constants.kMaxVel, 2) / (2 * constants.kMaxDecel));
     }
 
     /**
@@ -56,24 +63,24 @@ public class DistanceParameterizedVelocityGenerator {
      * based on time and distance. This allows for better handling of disturbances and more accurate following.
      * @return the output of the controller
      */
-    public double update(double positionError) {
+    public double update(double currentVelocity, double distance) {
         double dt = System.nanoTime() - this.lastNanoTime;
         this.lastNanoTime = System.nanoTime();
 
-        runningSeconds += (dt / Math.pow(10, 9));
+//        if (distance < this.distanceToDecelerate) {
+//            ret = Math.sqrt(2 * constants.kMaxDecel * distance);
+//        }
+//        else if (runningSeconds < this.timeToAccelerate) {
+//            ret = runningSeconds * constants.kMaxAccel;
+//        }
+//        else {
+//            ret = constants.kMaxVel;
+//        }
 
-        double ret;
-
-        if (positionError < this.distanceToDecelerate) {
-            ret = Math.sqrt(2 * constants.kMaxDecel * positionError);
-        }
-        else if (runningSeconds < this.timeToAccelerate) {
-            ret = runningSeconds * constants.kMaxAccel;
-        }
-        else {
-            ret = constants.kMaxVel;
-        }
-
-        return ret;
+        return Math.min(Math.min(
+                currentVelocity + (constants.kMaxAccel * dt),
+                constants.kMaxVel),
+                Math.sqrt(Math.pow(this.finalVelocity, 2) + (2 * constants.kMaxDecel * distance))
+        );
     }
 }

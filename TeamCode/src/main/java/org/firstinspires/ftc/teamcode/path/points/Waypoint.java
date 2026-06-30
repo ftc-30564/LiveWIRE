@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.path.points;
 
+import org.firstinspires.ftc.teamcode.drivetrain.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
 
 public class Waypoint {
@@ -42,6 +43,10 @@ public class Waypoint {
 
     public Pose2d trackedPoint = null;
 
+    public Waypoint(Pose2d point) {
+        this(point, MecanumDrivetrain.DEFAULT_ACCEL, MecanumDrivetrain.DEFAULT_DECEL, MecanumDrivetrain.DEFAULT_VELOCITY, MecanumDrivetrain.DEFAULT_SLOWDOWN_RATIO);
+    }
+
     /**
      * Creates a new waypoint with the given point, max acceleration, and max deceleration.
      * @param point The desired 2d pose on the field, including x, y, and heading
@@ -49,9 +54,7 @@ public class Waypoint {
      * @param maxDecel The max deceleration approaching the point, in inches per second squared
      */
     public Waypoint(Pose2d point, double maxAccel, double maxDecel) {
-        this.point = point;
-        this.maxAccel = maxAccel;
-        this.maxDecel = maxDecel;
+        this(point, maxAccel, maxDecel, MecanumDrivetrain.DEFAULT_VELOCITY, MecanumDrivetrain.DEFAULT_SLOWDOWN_RATIO);
     }
 
     /**
@@ -62,10 +65,7 @@ public class Waypoint {
      * @param velocity The target velocity the robot should aim at when approaching the point, in inches per second
      */
     public Waypoint(Pose2d point, double maxAccel, double maxDecel, double velocity) {
-        this.point = point;
-        this.maxAccel = maxAccel;
-        this.maxDecel = maxDecel;
-        this.targetVelocity = velocity;
+        this(point, maxAccel, maxDecel, velocity, MecanumDrivetrain.DEFAULT_SLOWDOWN_RATIO);
     }
 
     /**

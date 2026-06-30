@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drivetrain.mecanum;
+package org.firstinspires.ftc.teamcode.drivetrain;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -68,6 +68,11 @@ public class MecanumDrivetrain {
             0,    // kD
             0     // kF
     );
+
+    public static final double DEFAULT_ACCEL = 100;
+    public static final double DEFAULT_DECEL = -100;
+    public static final double DEFAULT_VELOCITY = 50;
+    public static final double DEFAULT_SLOWDOWN_RATIO = 1;
 
     private double frontLeftPower;
     private double frontRightPower;

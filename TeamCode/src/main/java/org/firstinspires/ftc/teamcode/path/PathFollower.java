@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.path;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.drivetrain.mecanum.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.drivetrain.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.path.points.HeadingStrategy;
 import org.firstinspires.ftc.teamcode.path.points.Waypoint;
 import org.firstinspires.ftc.teamcode.util.math.Line2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
 import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
-import org.firstinspires.ftc.teamcode.util.pid.constants.PIDFConstants;
 import org.firstinspires.ftc.teamcode.util.pid.controller.DistanceParameterizedVelocityGenerator;
 import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
 import org.firstinspires.ftc.teamcode.util.pid.controller.PIDFController;
@@ -35,6 +34,7 @@ public class PathFollower {
     private Pose2d currentPose;
     // The current velocity of the robot, but robot centric. This is necessary to use two forward/lateral velocity controllers.
     private Pose2d currentVelocityRobotCentric;
+    private double currentVelocityAlongPathLine = 0;
     // This is the target velocity the robot must follow, but converted to robot centric.
     private Vector2d targetVelocityRobotCentric;
     private Line2d pathLine;  // the target path represented as a Line2d
@@ -47,6 +47,8 @@ public class PathFollower {
     private double targetVelocity;
     private double targetRotation;
     private double perpendicularError;
+
+    private boolean isFinished = true;
 
     /**
      * Class that generates vectors to follow to maintain a path.
@@ -68,13 +70,19 @@ public class PathFollower {
      */
     public void startPath(Path path) {
         this.path = path;
+        this.isFinished = false;
 
         this.setWaypoint(0);
     }
 
-    public void update(Pose2d currentPose, Pose2d currentVelocity) {
+    public void update() {
         this.currentPose = this.drivetrain.getPose();
         this.currentVelocityRobotCentric = this.drivetrain.getRobotRelativeVelocity();
+
+        // uses the pythag theorem to calculate the velocity only in the path's direction.
+        // TODO: at the moment this is always positive. there needs to be a way to flip the sign if it's backwards.
+        this.currentVelocityAlongPathLine = Math.sqrt((this.drivetrain.getFieldRelativeVelocity().vector(DistanceUnit.INCH).getMagnitude()) +
+                this.pathLine.distanceToPoint(this.drivetrain.getFieldRelativeVelocity().vector(DistanceUnit.INCH)));
 
         if (this.nextWaypoint.headingStrategy == HeadingStrategy.INSTANT) {
             this.targetRotation = this.nextWaypoint.point.heading.getRadians();
@@ -84,15 +92,15 @@ public class PathFollower {
             this.targetRotation = this.nextWaypoint.point.heading.getRadians();
         }
 
-        this.targetVelocityRobotCentric = this.pathVector.withMagnitude(targetVelocity).rotated(-this.currentPose.heading.getRadians());
-
         // distance from the target waypoint
         this.distanceFromNextWaypoint = this.currentPose.distanceFrom(this.nextWaypoint.point).inches();
 
+        // generates a target velocity based on the distance from the target waypoint
+        this.targetVelocity = this.distanceProfiledVelocityGenerator.update(this.distanceFromNextWaypoint, this.currentVelocityAlongPathLine);
+        this.targetVelocityRobotCentric = this.pathVector.withMagnitude(targetVelocity).rotated(-this.currentPose.heading.getRadians());
+
         // the perpendicular distance (error) from the path line that the robot must correct for.
         this.perpendicularError = this.pathLine.distanceToPoint(this.currentPose.vector(DistanceUnit.INCH));
-        // generates a target velocity based on the distance from the target waypoint
-        this.targetVelocity = this.distanceProfiledVelocityGenerator.update(this.distanceFromNextWaypoint);
 
         Vector2d calculatedDriveVector = new Vector2d(
                 this.forwardVelocityController.update(this.currentVelocityRobotCentric.x.inches(), this.targetVelocityRobotCentric.x),
@@ -113,7 +121,12 @@ public class PathFollower {
         if (this.distanceFromNextWaypoint < this.nextWaypoint.tolerance) {
             this.currentWaypointIndex ++;
 
-            this.setWaypoint(this.currentWaypointIndex);
+            if (currentWaypointIndex == (this.path.waypoints.size()-1)) {
+                this.isFinished = true;
+            }
+            else {
+                this.setWaypoint(this.currentWaypointIndex);
+            }
         }
     }
 
@@ -126,7 +139,7 @@ public class PathFollower {
         this.lastWaypoint = this.path.waypoints.get(index);
         this.nextWaypoint = this.path.waypoints.get(index+1);
 
-        this.distanceProfiledVelocityGenerator.reset(this.lastWaypoint.targetVelocity, this.nextWaypoint.targetVelocity);
+        this.distanceProfiledVelocityGenerator.reset(this.lastWaypoint.targetVelocity, this.nextWaypoint.targetVelocity, this.lastWaypoint.distanceFrom(this.nextWaypoint));
         this.distanceProfiledVelocityGenerator.setConstants(
                 new ProfiledControllerConstants(
                     this.lastWaypoint.maxAccel,
@@ -137,5 +150,9 @@ public class PathFollower {
 
         this.pathVector = this.nextWaypoint.point.vector(DistanceUnit.INCH).minus(this.lastWaypoint.point.vector(DistanceUnit.INCH));
         this.pathLine = new Line2d(this.lastWaypoint.point.vector(DistanceUnit.INCH), this.nextWaypoint.point.vector(DistanceUnit.INCH));
+    }
+
+    public boolean isFinished() {
+        return isFinished;
     }
 }
