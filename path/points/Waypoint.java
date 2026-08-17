@@ -1,7 +1,7 @@
-package org.firstinspires.ftc.teamcode.path.points;
+package org.firstinspires.ftc.teamcode.livewire.path.points;
 
-import org.firstinspires.ftc.teamcode.drivetrain.MecanumDrivetrain;
-import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
+import org.firstinspires.ftc.teamcode.livewire.drivetrain.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.livewire.util.math.units.Pose2d;
 
 public class Waypoint {
     /**

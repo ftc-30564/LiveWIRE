@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.path.points;
+package org.firstinspires.ftc.teamcode.livewire.path.points;
 
 public enum HeadingStrategy {
     INSTANT,

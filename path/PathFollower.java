@@ -1,15 +1,15 @@
-package org.firstinspires.ftc.teamcode.path;
+package org.firstinspires.ftc.teamcode.livewire.path;
 
-import org.firstinspires.ftc.teamcode.drivetrain.MecanumDrivetrain;
-import org.firstinspires.ftc.teamcode.path.points.HeadingStrategy;
-import org.firstinspires.ftc.teamcode.path.points.Waypoint;
-import org.firstinspires.ftc.teamcode.util.math.units.Line2d;
-import org.firstinspires.ftc.teamcode.util.math.units.Pose2d;
-import org.firstinspires.ftc.teamcode.util.math.units.Vector2d;
-import org.firstinspires.ftc.teamcode.util.pid.controller.DistanceParameterizedVelocityGenerator;
-import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
-import org.firstinspires.ftc.teamcode.util.pid.controller.PIDFController;
-import org.firstinspires.ftc.teamcode.util.pid.controller.VelocityController;
+import org.firstinspires.ftc.teamcode.livewire.drivetrain.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.livewire.path.points.HeadingStrategy;
+import org.firstinspires.ftc.teamcode.livewire.path.points.Waypoint;
+import org.firstinspires.ftc.teamcode.livewire.util.math.units.Line2d;
+import org.firstinspires.ftc.teamcode.livewire.util.math.units.Pose2d;
+import org.firstinspires.ftc.teamcode.livewire.util.math.units.Vector2d;
+import org.firstinspires.ftc.teamcode.livewire.util.pid.controller.DistanceParameterizedVelocityGenerator;
+import org.firstinspires.ftc.teamcode.livewire.util.pid.constants.ProfiledControllerConstants;
+import org.firstinspires.ftc.teamcode.livewire.util.pid.controller.PIDFController;
+import org.firstinspires.ftc.teamcode.livewire.util.pid.controller.VelocityController;
 
 public class PathFollower {
     private MecanumDrivetrain drivetrain;

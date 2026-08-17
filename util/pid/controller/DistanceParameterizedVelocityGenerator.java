@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode.util.pid.controller;
+package org.firstinspires.ftc.teamcode.livewire.util.pid.controller;
 
-import org.firstinspires.ftc.teamcode.util.pid.constants.ProfiledControllerConstants;
+import org.firstinspires.ftc.teamcode.livewire.util.pid.constants.ProfiledControllerConstants;
 
 public class DistanceParameterizedVelocityGenerator {
     private ProfiledControllerConstants constants;

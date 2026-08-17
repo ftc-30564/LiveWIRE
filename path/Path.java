@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode.path;
+package org.firstinspires.ftc.teamcode.livewire.path;
 
-import org.firstinspires.ftc.teamcode.path.points.Waypoint;
+import org.firstinspires.ftc.teamcode.livewire.path.points.Waypoint;
 
 import java.util.ArrayList;
 
