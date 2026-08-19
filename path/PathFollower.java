@@ -74,12 +74,15 @@ public class PathFollower {
         this.setWaypoint(0);
     }
 
+    /**
+     * Sends the necessary power to the drivetrain to follow the queued path. NOTE: This does not update the drivetrain. You must call drivetrain.update() outside of this.
+     */
     public void update() {
         this.currentPose = this.drivetrain.getPose();
         this.currentVelocityRobotCentric = this.drivetrain.getRobotRelativeVelocity();
 
         // uses the pythag theorem to calculate the velocity only in the path's direction
-        this.currentVelocityAlongPathLine = Math.sqrt((this.drivetrain.getFieldRelativeVelocity().vector.getMagnitude()) +
+        this.currentVelocityAlongPathLine = Math.sqrt((this.drivetrain.getFieldRelativeVelocity().vector.getMagnitude()) -
                 this.pathLine.distanceToPoint(this.drivetrain.getFieldRelativeVelocity().vector));
 
         // checks if the drivetrain is going in the direction of the path by checking its angle compared to the path angle.

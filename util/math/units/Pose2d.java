@@ -167,6 +167,19 @@ public class Pose2d {
     }
 
     /**
+     * Multiplies two poses together
+     * @param pose the pose to multiply
+     * @return the product of the two poses
+     */
+    public Pose2d times(Pose2d pose) {
+        return new Pose2d(
+                this.vector.x * pose.vector.x,
+                this.vector.y * pose.vector.y,
+                this.heading * pose.heading
+        );
+    }
+
+    /**
      * Finds the distance between two poses using the Pythagorean Theorem
      * @param pose the pose to get the distance from
      */
