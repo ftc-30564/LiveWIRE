@@ -123,6 +123,15 @@ public class Pose2d {
     }
 
     /**
+     * Sets every component to zero in the pose object.
+     */
+    public void zero() {
+        this.vector.x = 0;
+        this.vector.y = 0;
+        this.heading = 0;
+    }
+
+    /**
      * Adds two poses together.
      * @param pose the pose to add
      * @return a new pose with the X, Y and headings combined.
@@ -177,6 +186,18 @@ public class Pose2d {
                 this.vector.y * pose.vector.y,
                 this.heading * pose.heading
         );
+    }
+
+    /**
+     * Returns the pose with all its components absolute-valued
+     * @return new pose with absolute-valued components
+     */
+    public Pose2d abs() {
+        return new Pose2d(
+                Math.abs(this.vector.x),
+                Math.abs(this.vector.y),
+                Math.abs(this.heading)
+                );
     }
 
     /**

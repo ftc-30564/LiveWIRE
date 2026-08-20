@@ -6,22 +6,20 @@ public class PoseEstimator {
     private final Localizer localizer;
 
     // the last localizer-estimated pose, used for finding the delta
-    private Pose2d lastLocalizerPose;
+    private Pose2d lastOdometryPose;
+    private Pose2d odometryDelta;
     private Pose2d poseUncertainty;
 
+    // the total estimated pose
     private Pose2d estimatedPose;
+    // the prediction step
+    private Pose2d predictedPose;
 
-    private final double localizerTranslationUncertainty = 0.01;
-    private final double localizerRotationUncertainty = 0.01;
+    private final Pose2d localizerUncertainty = new Pose2d(0.01, 0.01, 0.01);
 
     private Pose2d latestVisionPose;
-    private double latestVisionXUncertainty;
-    private double latestVisionYUncertainty;
-    private double latestVisionHeadingUncertainty;
-
-    private Pose2d calculateLocalizerUncertainty(Pose2d deltas) {
-        return deltas.times(new Pose2d(localizerTranslationUncertainty, localizerTranslationUncertainty, localizerRotationUncertainty));
-    }
+    private Pose2d latestVisionUncertainty;
+    private Pose2d visionDifference;
 
     /**
      * Creates a new PoseEstimator with the specified localizer. The localizer will be used to update the estimated pose of the robot based on the localizer's readings.
@@ -30,6 +28,8 @@ public class PoseEstimator {
      */
     public PoseEstimator(Localizer localizer) {
         this.localizer = localizer;
+
+        // reset the overall pose uncertainty
         this.poseUncertainty = new Pose2d();
     }
 
@@ -47,13 +47,13 @@ public class PoseEstimator {
      */
     public void setPose(Pose2d pose) {
         this.estimatedPose = pose;
+        this.localizer.setPose(pose);
+        this.poseUncertainty.zero();
     }
 
-    public void addVisionMeasurement(Pose2d visionPose, double xDeviation, double yDeviation, double headingDeviation) {
+    public void addVisionMeasurement(Pose2d visionPose, Pose2d latestVisionUncertainty) {
         this.latestVisionPose = visionPose;
-        this.latestVisionXUncertainty = xDeviation;
-        this.latestVisionYUncertainty = yDeviation;
-        this.latestVisionHeadingUncertainty = headingDeviation;
+        this.latestVisionUncertainty = latestVisionUncertainty;
     }
 
     /**
@@ -68,20 +68,21 @@ public class PoseEstimator {
      * Updates the estimated pose of the robot based on the localizer's readings. This should be called in a loop to continuously update the pose estimation. 
      */
     public void update() {
-        if (this.lastLocalizerPose == null) {
-            lastLocalizerPose = localizer.getPose();
+        if (this.lastOdometryPose == null) {
+            lastOdometryPose = localizer.getPose();
         }
 
-        // the "prediction" step, aka what the pinpoint says changed
+        this.odometryDelta = localizer.getPose().minus(this.lastOdometryPose);
 
-        Pose2d predictedPose = this.estimatedPose.plus(localizer.getPose().minus(this.lastLocalizerPose));
-        this.poseUncertainty = this.poseUncertainty.plus(calculateLocalizerUncertainty(localizer.getPose().minus(this.lastLocalizerPose)));
-
+        // the "prediction" step, aka the odometry pose
+        this.predictedPose = this.estimatedPose.plus(this.odometryDelta);
+        // add to the uncertainty
+        this.poseUncertainty = this.poseUncertainty.plus(this.odometryDelta.abs().times(localizerUncertainty));
 
         if (this.latestVisionPose != null) {
-            Pose2d innovation = this.latestVisionPose.minus(predictedPose);
+            this.visionDifference = this.latestVisionPose.minus(predictedPose);
 
-            Pose2d totalDisagreement = this.poseUncertainty.plus(new Pose2d(this.latestVisionXUncertainty, this.latestVisionYUncertainty, this.latestVisionHeadingUncertainty));
+            Pose2d totalDisagreement = this.poseUncertainty.plus(this.latestVisionUncertainty);
 
             Pose2d kalmanGains = new Pose2d(
                     this.poseUncertainty.vector.x / totalDisagreement.vector.x,
@@ -89,13 +90,19 @@ public class PoseEstimator {
                     this.poseUncertainty.heading / totalDisagreement.heading
             );
 
-            this.estimatedPose = predictedPose.plus(kalmanGains.times(innovation));
-            this.poseUncertainty = this.poseUncertainty.times(new Pose2d(1 / kalmanGains.vector.x, 1 / kalmanGains.vector.y, 1 / kalmanGains.heading));
+            this.estimatedPose = predictedPose.plus(kalmanGains.times(this.visionDifference));
+            this.poseUncertainty = this.poseUncertainty.times(
+                    new Pose2d(
+                            1 - kalmanGains.vector.x,
+                            1 - kalmanGains.vector.y,
+                            1 - kalmanGains.heading));
 
             this.latestVisionPose = null;
         }
         else {
             this.estimatedPose = predictedPose;
         }
+
+        lastOdometryPose = localizer.getPose();
     }
 }
