@@ -9,6 +9,8 @@ public interface Localizer {
      */
     Pose2d getPose();
 
+    Pose2d getPoseDelta();
+
     /**
      * Sets the current global pose of the robot.
      * @return The current global pose of the robot.

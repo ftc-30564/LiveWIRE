@@ -20,4 +20,8 @@ public class PIDSVAConstants {
         this.kV = kV;
         this.kA = kA;
     }
+
+    public PIDSVAConstants withKV(double kv) {
+        return new PIDSVAConstants(this.kS, kv, this.kA, this.kP, this.kI, this.kD);
+    }
 }

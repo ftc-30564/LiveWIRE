@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.livewire.util.math.units;
 
-import android.app.ActivityOptions;
-
 public class Vector2d {
     public double x;
     public double y;
@@ -21,12 +19,26 @@ public class Vector2d {
     }
 
     /**
-     * Adds two vectors
+     * Adds two vectors and creates a new one
      * @param add Vector to add to this vector
      * @return The resulting vector
      */
     public Vector2d plus(Vector2d add) {
         return new Vector2d(this.x + add.x, this.y + add.y);
+    }
+
+    /**
+     * Adds a vector to the existing vector and returns itself.
+     * This does NOT create a new vector object, just adds to the
+     * existing object
+     * @param add
+     * @return
+     */
+    public Vector2d plusInPlace(Vector2d add) {
+        this.x += add.x;
+        this.y += add.y;
+
+        return this;
     }
 
     /**
@@ -36,6 +48,42 @@ public class Vector2d {
      */
     public Vector2d minus(Vector2d sub) {
         return new Vector2d(this.x - sub.x, this.y - sub.y);
+    }
+
+    public Vector2d times(Vector2d second) {
+        return new Vector2d(this.x * second.x, this.y * second.y);
+    }
+
+    public Vector2d times(double scalar) {
+        return new Vector2d(this.x * scalar, this.y * scalar);
+    }
+
+    public void timesInPlace(double scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+    }
+
+    /**
+     * Subtracts two vectors
+     * @param sub Vector to subtract from this vector
+     * @return The resulting vector
+     */
+    public Vector2d divided(Vector2d denom) {
+        return new Vector2d(this.x / denom.x, this.y / denom.y);
+    }
+
+    /**
+     * Subtracts two vectors
+     * @param sub Vector to subtract from this vector
+     * @return The resulting vector
+     */
+    public Vector2d divided(double num) throws ArithmeticException {
+        try {
+            return new Vector2d(this.x / num, this.y / num);
+        }
+        catch (ArithmeticException e) {
+            throw new ArithmeticException("Division by zero!");
+        }
     }
 
     /**
@@ -63,6 +111,14 @@ public class Vector2d {
         return this.y / this.x;
     }
 
+    public double cross(Vector2d second) {
+        return (this.x * second.y) - (this.y * second.x);
+    }
+
+    public double dot(Vector2d second) {
+        return (this.x * second.x) + (this.y * second.y);
+    }
+
     /**
      * Sets a new angle and magnitude for the vector.
      * @param angleRadians The new angle, in radians
@@ -75,6 +131,7 @@ public class Vector2d {
 
     /**
      * Sets a new magnitude for the vector while maintaining its current angle.
+     * NOTE: if a negative magnitude is plugged in, the vector will maintain the same mag but will flip 180 degrees
      * @param mag The new magnitude
      */
     public void setMagnitude(double mag) {
@@ -100,6 +157,10 @@ public class Vector2d {
         return this.withAngle(this.getAngle() + radians);
     }
 
+    public void rotateInPlace(double radians) {
+        this.setAngle(this.getAngle() + radians);
+    }
+
     public Vector2d withAngle(double angle) {
         Vector2d ret = new Vector2d(this.x, this.y);
         ret.setAngle(angle);
@@ -114,7 +175,15 @@ public class Vector2d {
         return ret;
     }
 
+    public static Vector2d unitVector(double angle) {
+        return new Vector2d(1, 1).withAngle(angle);
+    }
+
+    public Vector2d normalized() {
+        return this.withMagnitude(1);
+    }
+
     public Vector2d perpendicular() {
-        return new Vector2d(this.x, -this.y);
+        return new Vector2d(-this.y, this.x);
     }
 }

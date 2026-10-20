@@ -20,8 +20,12 @@ public class VelocityController {
         this.constants = constants;
     }
 
+    public void setConstants(PIDSVAConstants constants) {
+        this.constants = constants;
+    }
+
     public double update(double current, double setpoint) {
-        double dt = System.nanoTime() - lastNanoTime;
+        double dt = (System.nanoTime() - lastNanoTime) / 1e9;
 
         this.lastNanoTime = System.nanoTime();
 

@@ -6,20 +6,23 @@ public class PoseEstimator {
     private final Localizer localizer;
 
     // the last localizer-estimated pose, used for finding the delta
-    private Pose2d lastOdometryPose;
     private Pose2d odometryDelta;
     private Pose2d poseUncertainty;
 
     // the total estimated pose
-    private Pose2d estimatedPose;
+    private Pose2d estimatedPose = new Pose2d();
+    // the last estimated pose, used to calculate velocity
+    private Pose2d lastEstimatedPose = new Pose2d();
     // the prediction step
     private Pose2d predictedPose;
+    private Pose2d velocity = new Pose2d();
 
     private final Pose2d localizerUncertainty = new Pose2d(0.01, 0.01, 0.01);
 
     private Pose2d latestVisionPose;
     private Pose2d latestVisionUncertainty;
-    private Pose2d visionDifference;
+
+    private long lastNano = System.nanoTime();
 
     /**
      * Creates a new PoseEstimator with the specified localizer. The localizer will be used to update the estimated pose of the robot based on the localizer's readings.
@@ -47,7 +50,6 @@ public class PoseEstimator {
      */
     public void setPose(Pose2d pose) {
         this.estimatedPose = pose;
-        this.localizer.setPose(pose);
         this.poseUncertainty.zero();
     }
 
@@ -61,26 +63,31 @@ public class PoseEstimator {
      * @return
      */
     public Pose2d getFieldCentricVelocity() {
-        return localizer.getVelocity();
+        return this.velocity;
     }
 
     /**
      * Updates the estimated pose of the robot based on the localizer's readings. This should be called in a loop to continuously update the pose estimation. 
      */
     public void update() {
-        if (this.lastOdometryPose == null) {
-            lastOdometryPose = localizer.getPose();
-        }
+        this.lastEstimatedPose = this.estimatedPose;
+        // rotate the localizer delta by the current estimated heading
+        // TODO: here it should compare with the estimated pose and based on the heading difference, it should rotate the delta
+        this.odometryDelta = localizer.getPoseDelta();//new Pose2d(localizer.getPoseDelta().vector, localizer.getPoseDelta().heading);
 
-        this.odometryDelta = localizer.getPose().minus(this.lastOdometryPose);
+        // Account for the fact that the pinpoint might have a different heading than the overall estimated pose, since
+        // the estimated pose receives vision estimates and the heading might change compared to where the pinpoint thinks
+        // it is.
+        this.odometryDelta.vector.rotateInPlace(this.estimatedPose.getHeading() - localizer.getPose().heading);
 
         // the "prediction" step, aka the odometry pose
         this.predictedPose = this.estimatedPose.plus(this.odometryDelta);
-        // add to the uncertainty
-        this.poseUncertainty = this.poseUncertainty.plus(this.odometryDelta.abs().times(localizerUncertainty));
 
-        if (this.latestVisionPose != null) {
-            this.visionDifference = this.latestVisionPose.minus(predictedPose);
+        // add to the uncertainty
+        this.poseUncertainty.plusInPlace(this.odometryDelta.absInPlace().timesInPlace(this.localizerUncertainty));
+
+        if (false) {//this.latestVisionPose != null) {
+            this.latestVisionPose.minusInPlace(this.predictedPose);
 
             Pose2d totalDisagreement = this.poseUncertainty.plus(this.latestVisionUncertainty);
 
@@ -90,7 +97,7 @@ public class PoseEstimator {
                     this.poseUncertainty.heading / totalDisagreement.heading
             );
 
-            this.estimatedPose = predictedPose.plus(kalmanGains.times(this.visionDifference));
+            this.estimatedPose = predictedPose.plus(kalmanGains.times(this.latestVisionPose));
             this.poseUncertainty = this.poseUncertainty.times(
                     new Pose2d(
                             1 - kalmanGains.vector.x,
@@ -103,6 +110,10 @@ public class PoseEstimator {
             this.estimatedPose = predictedPose;
         }
 
-        lastOdometryPose = localizer.getPose();
+        // oops forgot to divide by delta t
+        this.velocity = this.estimatedPose.minus(lastEstimatedPose).divided((System.nanoTime() - this.lastNano) / 1e9);
+
+        this.lastNano = System.nanoTime();
+        this.localizer.update();
     }
 }

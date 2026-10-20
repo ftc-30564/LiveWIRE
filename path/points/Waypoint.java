@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.livewire.path.points;
 
-import org.firstinspires.ftc.teamcode.livewire.drivetrain.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.livewire.drivetrain.mecanum.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.livewire.util.math.units.Pose2d;
+import org.json.JSONObject;
 
 public class Waypoint {
     /**
@@ -39,6 +40,20 @@ public class Waypoint {
 
     public Waypoint(Pose2d point) {
         this(point, MecanumDrivetrain.DEFAULT_ACCEL, MecanumDrivetrain.DEFAULT_DECEL, MecanumDrivetrain.DEFAULT_VELOCITY);
+    }
+
+    public Waypoint(JSONObject obj) throws Exception {
+        this.point = new Pose2d(
+                obj.getDouble("x"),
+                obj.getDouble("y"),
+                Math.toRadians(obj.getDouble("theta"))
+                        );
+
+        this.maxVelocity = obj.getDouble("maxVelocity");
+        this.maxAccel = obj.getDouble("maxAcceleration");
+        this.maxDecel = obj.getDouble("maxDeceleration");
+        this.targetVelocity = obj.getDouble("endingVelocity");
+        this.tolerance = obj.getDouble("tolerance");
     }
 
     /**

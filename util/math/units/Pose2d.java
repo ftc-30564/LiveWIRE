@@ -56,6 +56,16 @@ public class Pose2d {
      * Constructor for Pose2d. A class containing a 2d translational and a rotational element, often used to represent the robot's current state on the field.
      * @param x x translation, in inches
      * @param y y translation, in inches
+     */
+    public Pose2d(double x, double y) {
+        this.vector = new Vector2d(x, y);
+        this.heading = 0;
+    }
+
+    /**
+     * Constructor for Pose2d. A class containing a 2d translational and a rotational element, often used to represent the robot's current state on the field.
+     * @param x x translation, in inches
+     * @param y y translation, in inches
      * @param theta rotation, in radians
      */
     public Pose2d(double x, double y, double theta) {
@@ -142,6 +152,13 @@ public class Pose2d {
                 this.heading + pose.heading);
     }
 
+    public Pose2d plusInPlace(Pose2d pose2d) {
+        this.vector.x += pose2d.vector.x;
+        this.vector.y += pose2d.vector.y;
+        this.heading += pose2d.heading;
+
+        return this;
+    }
     /**
      * Adds a vector to the pose together.
      * @param vector the vector to add
@@ -175,6 +192,36 @@ public class Pose2d {
                 this.heading);
     }
 
+    public Pose2d minusInPlace(Pose2d pose2d) {
+        this.vector.x -= pose2d.vector.x;
+        this.vector.y -= pose2d.vector.y;
+        this.heading -= pose2d.heading;
+
+        return this;
+    }
+
+    /**
+     * Divides the current pose by another
+     * @param pose the pose to divide (the denominator)
+     * @return a new pose with the X, Y and headings divided
+     */
+    public Pose2d divided(Pose2d pose) {
+        return new Pose2d(
+                this.vector.divided(pose.vector),
+                this.heading / pose.heading);
+    }
+
+    /**
+     * Divides the current pose by another
+     * @param num the number to divide (the denominator)
+     * @return a new pose with the X, Y and headings divided by the number provided
+     */
+    public Pose2d divided(double num) {
+        return new Pose2d(
+                this.vector.divided(num),
+                this.heading / num);
+    }
+
     /**
      * Multiplies two poses together
      * @param pose the pose to multiply
@@ -188,8 +235,16 @@ public class Pose2d {
         );
     }
 
+    public Pose2d timesInPlace(Pose2d pose2d) {
+        this.vector.x *= pose2d.vector.x;
+        this.vector.y *= pose2d.vector.y;
+        this.heading *= pose2d.heading;
+
+        return this;
+    }
+
     /**
-     * Returns the pose with all its components absolute-valued
+     * Returns a new pose with all its components absolute-valued
      * @return new pose with absolute-valued components
      */
     public Pose2d abs() {
@@ -198,6 +253,20 @@ public class Pose2d {
                 Math.abs(this.vector.y),
                 Math.abs(this.heading)
                 );
+    }
+
+    /**
+     * Returns the existing pose with all its components absolute-valued
+     * Note: this does NOT create a new pose, but rather saves all the components
+     * as absolute value and then returns itself.
+     * @return itself with absolute-valued components
+     */
+    public Pose2d absInPlace() {
+        this.vector.x = Math.abs(this.vector.x);
+        this.vector.y = Math.abs(this.vector.y);
+        this.heading = Math.abs(this.heading);
+
+        return this;
     }
 
     /**
@@ -216,29 +285,33 @@ public class Pose2d {
         return this.vector.distanceFrom(vector);
     }
 
-//    /**
-//     * Converts a Pose2d across a coordinate system.
-//     * @param pose the pose to convert
-//     * @param before the current coordinate system of the pose object
-//     * @param after the desired coordinate system
-//     * @return a converted Pose2d
-//     */
-//    public static Pose2d convertCoordinateSystem(Pose2d pose, CoordinateSystem before, CoordinateSystem after) {
-//        Pose2d addPose = new Pose2d();
-//
-//        addPose.x = Distance.fromInches(before.translationX - after.translationX);
-//        addPose.y = Distance.fromInches(before.translationY - after.translationY);
-//
-//        // TODO: implement rotation
-//
-//        return pose.plus(addPose);
-//    }
+    public Pose2d rotatedAroundPoint(Vector2d pivot, double radians) {
+        Pose2d ret = new Pose2d(this.vector.minus(pivot), this.heading + radians);
+        ret.vector.rotateInPlace(radians);
+        ret.vector.plusInPlace(pivot);
+
+        return ret;
+    }
+
+
+    /**
+     * Mirrors the pose across a horizontal line.
+     * @param y the y value of the line
+     * @return
+     */
+    public Pose2d mirroredAcrossY(double y) {
+        return new Pose2d(this.vector.x, y + (y - this.vector.y), heading);
+    }
 
     @SuppressLint("DefaultLocale")
     @NonNull
     @Override
     public String toString() {
         return String.format("Pose2d: %.2f, %.2f, %.2f", this.vector.x, this.vector.y, this.heading);
+    }
+
+    public Pose2d toFTCStandard() {
+        return new Pose2d((144-(72-this.getY()))-144, (72-(this.getX()+72))+72, this.heading - (Math.PI / 2));
     }
 
     public Pose2D pose2D() {

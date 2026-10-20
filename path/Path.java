@@ -10,6 +10,10 @@ import java.util.ArrayList;
 public class Path {
     public ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>() {};
 
+    public Path() {
+
+    }
+
     public Path(Waypoint startingPoint) {
         this.waypoints.add(startingPoint);
     }

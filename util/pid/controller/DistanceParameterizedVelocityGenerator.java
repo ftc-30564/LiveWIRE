@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.livewire.util.pid.controller;
 
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+
 import org.firstinspires.ftc.teamcode.livewire.util.pid.constants.ProfiledControllerConstants;
 
 public class DistanceParameterizedVelocityGenerator {
@@ -63,8 +65,8 @@ public class DistanceParameterizedVelocityGenerator {
      * based on time and distance. This allows for better handling of disturbances and more accurate following.
      * @return the output of the controller
      */
-    public double update(double currentVelocity, double distance) {
-        double dt = System.nanoTime() - this.lastNanoTime;
+    public double update(double distance, double currentVelocity) {
+        runningSeconds += (System.nanoTime() - this.lastNanoTime) / 1e9;
         this.lastNanoTime = System.nanoTime();
 
 //        if (distance < this.distanceToDecelerate) {
@@ -77,8 +79,13 @@ public class DistanceParameterizedVelocityGenerator {
 //            ret = constants.kMaxVel;
 //        }
 
+//        telemetry.addData("Gen/currentVelocity", currentVelocity);
+//        telemetry.addData("Gen/accel", this.initialVelocity + (constants.kMaxAccel * runningSeconds));
+//        telemetry.addData("Gen/max", constants.kMaxVel);
+//        telemetry.addData("Gen/decel", Math.sqrt(Math.pow(this.finalVelocity, 2) + (2 * constants.kMaxDecel * distance)));
+
         return Math.min(Math.min(
-                currentVelocity + (constants.kMaxAccel * dt),
+                this.initialVelocity + (constants.kMaxAccel * runningSeconds),
                 constants.kMaxVel),
                 Math.sqrt(Math.pow(this.finalVelocity, 2) + (2 * constants.kMaxDecel * distance))
         );

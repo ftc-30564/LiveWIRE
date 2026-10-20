@@ -1,16 +1,20 @@
-package org.firstinspires.ftc.teamcode.livewire.drivetrain;
+package org.firstinspires.ftc.teamcode.livewire.drivetrain.mecanum;
 
+import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.livewire.localizer.PoseEstimator;
+import org.firstinspires.ftc.teamcode.livewire.util.math.MathUtil;
 import org.firstinspires.ftc.teamcode.livewire.util.math.units.Pose2d;
 import org.firstinspires.ftc.teamcode.livewire.util.math.units.Vector2d;
 import org.firstinspires.ftc.teamcode.livewire.util.pid.constants.PIDFConstants;
 import org.firstinspires.ftc.teamcode.livewire.util.pid.constants.PIDSVAConstants;
+import org.firstinspires.ftc.teamcode.livewire.util.pid.controller.VelocityController;
 
+@Config
 public class MecanumDrivetrain {
     private final DcMotorEx frontLeftMotor;
     private final DcMotorEx frontRightMotor;
@@ -18,66 +22,78 @@ public class MecanumDrivetrain {
     private final DcMotorEx backRightMotor;
 
     // TODO: change motor names
-    public static final String FRONT_LEFT_MOTOR_NAME = "frontLeftMotor";
-    public static final String FRONT_RIGHT_MOTOR_NAME = "frontRightMotor";
-    public static final String BACK_LEFT_MOTOR_NAME = "backLeftMotor";
-    public static final String BACK_RIGHT_MOTOR_NAME = "backRightMotor";
+    public static final String FRONT_LEFT_MOTOR_NAME = "fl";
+    public static final String FRONT_RIGHT_MOTOR_NAME = "fr";
+    public static final String BACK_LEFT_MOTOR_NAME = "bl";
+    public static final String BACK_RIGHT_MOTOR_NAME = "br";
 
     // TODO: change motor directions
-    public static final DcMotorSimple.Direction FRONT_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    public static final DcMotorSimple.Direction FRONT_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     public static final DcMotorSimple.Direction FRONT_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    public static final DcMotorSimple.Direction BACK_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    public static final DcMotorSimple.Direction BACK_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
     public static final DcMotorSimple.Direction BACK_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
 
     // TODO: tune these constants
-    public static final PIDSVAConstants FORWARD_VELOCITY_CONSTANTS
+    public static PIDSVAConstants FORWARD_VELOCITY_CONSTANTS
             = new PIDSVAConstants(
-        0,        // kS
-            0,        // kV
-            0,        // kA
-            0,        // kP
+            0.09,        // kS
+            0.012,        // kV
+            0.004,        // kA
+            0.0025,        // kP
             0,        // kI
             0         // kD
     );
 
     // TODO: tune these constants
-    public static final PIDSVAConstants LATERAL_VELOCITY_CONSTANTS
+    public static PIDSVAConstants LATERAL_VELOCITY_CONSTANTS
             = new PIDSVAConstants(
-            0,        // kS
-            0,        // kV
-            0,        // kA
-            0,        // kP
+            0.19,        // kS
+            0.016,        // kV
+            0.004,        // kA
+            0.005,        // kP
             0,        // kI
             0         // kD
     );
 
     // TODO: tune these constants
-    public static final PIDFConstants TRANSLATIONAL_PID_CONSTANTS
+    public static PIDFConstants TRANSLATIONAL_PID_CONSTANTS
             = new PIDFConstants(
-        0,    // kP
+        0.27,    // kP
             0,    // kI
-            0,    // kD
+            0.002,    // kD
             0     // kF
     );
 
     // TODO: tune these constants
-    public static final PIDFConstants ROTATIONAL_PID_CONSTANTS
+    public static PIDFConstants ROTATIONAL_PID_CONSTANTS
             = new PIDFConstants(
-            0,    // kP
+            1,    // kP
             0,    // kI
-            0,    // kD
+            0.008,    // kD
             0     // kF
     );
+
+    public static PIDFConstants HOLD_POINT_CONSTANTS = TRANSLATIONAL_PID_CONSTANTS;
+
+    // The amount to cache the motors by. For example, if the motors are set to an amount that is within
+    // the tolerance of the last percentage (aka a minimal change in percent), the motor will not be commanded.
+    // This helps preserve loop times when motors are set to a constant percent.
+    public static double MOTOR_CACHE = 0.03;
 
     public static final double DEFAULT_ACCEL = 100;
     public static final double DEFAULT_DECEL = -100;
     public static final double DEFAULT_VELOCITY = 50;
     public static final double DEFAULT_SLOWDOWN_RATIO = 1;
 
-    private double frontLeftPower;
-    private double frontRightPower;
-    private double backLeftPower;
-    private double backRightPower;
+    private double frontLeftPower = 0;
+    private double frontRightPower = 0;
+    private double backLeftPower = 0;
+    private double backRightPower = 0;
+
+    private double lastFrontLeftPower = 0;
+    private double lastFrontRightPower = 0;
+    private double lastBackLeftPower = 0;
+    private double lastBackRightPower = 0;
 
     private final PoseEstimator poseEstimator;
 
@@ -98,6 +114,11 @@ public class MecanumDrivetrain {
         this.frontRightMotor.setDirection(MecanumDrivetrain.FRONT_RIGHT_MOTOR_DIRECTION);
         this.backLeftMotor.setDirection(MecanumDrivetrain.BACK_LEFT_MOTOR_DIRECTION);
         this.backRightMotor.setDirection(MecanumDrivetrain.BACK_RIGHT_MOTOR_DIRECTION);
+
+        this.frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     /**
@@ -156,6 +177,8 @@ public class MecanumDrivetrain {
      * @param rotation the desired rotational velocity
      */
     public void setToRobotRelativePercent(Vector2d vector, double rotation) {
+        vector.setAngle(vector.getAngle() + (Math.PI/2));
+
         this.frontLeftPower  = vector.y + vector.x + rotation;
         this.frontRightPower = vector.y - vector.x - rotation;
         this.backLeftPower   = vector.y - vector.x + rotation;
@@ -172,15 +195,38 @@ public class MecanumDrivetrain {
         }
     }
 
+    public void update() {
+        this.update(true);
+    }
+
     /**
      * Updates the motor powers and the pose estimator. This should be called in a loop to continuously update the drivetrain.
+     * This will only update the motors if the commanded power is outside the cache range of what the motor is already set to.
      */
-    public void update() {
-        this.frontLeftMotor.setPower(this.frontLeftPower);
-        this.frontRightMotor.setPower(this.frontRightPower);
-        this.backLeftMotor.setPower(this.backLeftPower);
-        this.backRightMotor.setPower(this.backRightPower);
-
+    public void update(boolean runMotors) {
         this.poseEstimator.update();
+
+        if (!runMotors)
+            return;
+
+        if (!MathUtil.withinDeadband(this.lastFrontLeftPower, this.frontLeftPower, MecanumDrivetrain.MOTOR_CACHE)) {
+            this.frontLeftMotor.setPower(this.frontLeftPower);
+            this.lastFrontLeftPower = this.frontLeftPower;
+        }
+
+        if (!MathUtil.withinDeadband(this.lastFrontRightPower, this.frontRightPower, MecanumDrivetrain.MOTOR_CACHE)) {
+            this.frontRightMotor.setPower(this.frontRightPower);
+            this.lastFrontRightPower = this.frontRightPower;
+        }
+
+        if (!MathUtil.withinDeadband(this.lastBackLeftPower, this.backLeftPower, MecanumDrivetrain.MOTOR_CACHE)) {
+            this.backLeftMotor.setPower(this.backLeftPower);
+            this.lastBackLeftPower = this.backLeftPower;
+        }
+
+        if (!MathUtil.withinDeadband(this.lastBackRightPower, this.backRightPower, MecanumDrivetrain.MOTOR_CACHE)) {
+            this.backRightMotor.setPower(this.backRightPower);
+            this.lastBackRightPower = this.backRightPower;
+        }
     }
 }

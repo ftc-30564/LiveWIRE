@@ -112,6 +112,11 @@ public class Rotation2d {
         return new Rotation2d(this.radians % (Math.PI * 2));
     }
 
+    public static double wrappedRadians(double radians) {
+        final double twoPi = 2 * Math.PI;
+        return ((radians % twoPi) + twoPi) % twoPi;
+    }
+
     /**
      * A string of all the units of the Rotation2d
      * @return string that contains: Rotation2d: Rot: %.3f, Rad: %.3f, Deg: %.3f
